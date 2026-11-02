@@ -8,6 +8,24 @@
         "reasoning": "The double colon (::) is the scope resolution operator in C++ used to identify and access identifiers belonging to a specific namespace, class, or scope.",
         "source": "llm_gemini"
       }
+    },
+    "b2dcc46da61d00d028f7424cf04eb2bf": {
+      "question": "What does CPU stand for?",
+      "result": {
+        "selected_index": 1,
+        "selected_option": "Central Processing Unit",
+        "reasoning": "CPU is the standard and widely accepted acronym for Central Processing Unit, which is the primary component of a computer that executes instructions.",
+        "source": "llm_gemini"
+      }
+    },
+    "5eb52478e96537864fd8b8ed2b46fa33": {
+      "question": "Which data structure uses FIFO?",
+      "result": {
+        "selected_index": 1,
+        "selected_option": "Queue",
+        "reasoning": "A queue operates on a First-In, First-Out (FIFO) basis where the first element added is the first one to be removed.",
+        "source": "llm_gemini"
+      }
     }
   }
 }
