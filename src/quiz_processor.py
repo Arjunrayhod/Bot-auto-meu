@@ -9,6 +9,7 @@ import re
 import time
 import random
 import logging
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from playwright.sync_api import Page, Locator
 
@@ -246,9 +247,24 @@ def process_quiz(page: Page, task_id: str, title: str, subject: Optional[str] = 
         target_duration = random.randint(120, 240)
         logger.info(f"No explicit countdown found. Defaulting safety pacing to {target_duration}s.")
 
+    # Calculate exact clock times for 50% submission and safe user login
+    now_dt = datetime.now()
+    submit_dt = now_dt + timedelta(seconds=target_duration)
+    safe_login_dt = submit_dt + timedelta(minutes=1)
+    submit_time_str = submit_dt.strftime("%I:%M %p")
+    safe_login_time_str = safe_login_dt.strftime("%I:%M %p")
+
     # 1. Immediate Telegram Alert: Quiz Started
     try:
-        notify_quiz_started(subject=subject_name, title=title, task_id=task_id, time_limit_sec=time_limit_sec)
+        notify_quiz_started(
+            subject=subject_name,
+            title=title,
+            task_id=task_id,
+            time_limit_sec=time_limit_sec,
+            target_duration_sec=target_duration,
+            submit_time_str=submit_time_str,
+            safe_login_time_str=safe_login_time_str,
+        )
     except Exception as e:
         logger.warning(f"Failed to send quiz started alert: {e}")
 
@@ -296,9 +312,16 @@ def process_quiz(page: Page, task_id: str, title: str, subject: Optional[str] = 
             "reason": reasoning,
         })
 
-    # 4. Deliver complete Questions & Answers to Telegram
+    # 4. Deliver complete Questions & Answers to Telegram with exact login timer
     try:
-        notify_quiz_solutions(subject=subject_name, title=title, task_id=task_id, qa_list=solved_qa)
+        notify_quiz_solutions(
+            subject=subject_name,
+            title=title,
+            task_id=task_id,
+            qa_list=solved_qa,
+            submit_time_str=submit_time_str,
+            safe_login_time_str=safe_login_time_str,
+        )
     except Exception as e:
         logger.error(f"Failed to send quiz solutions to Telegram: {e}")
 

@@ -132,24 +132,61 @@ def notify_server_error(attempt: int, max_retries: int, status_code: int, wait_m
     send_telegram_message(msg, parse_mode="HTML")
 
 
-def notify_quiz_started(subject: str, title: str, task_id: str, time_limit_sec: Optional[int] = None):
+def notify_quiz_started(
+    subject: str,
+    title: str,
+    task_id: str,
+    time_limit_sec: Optional[int] = None,
+    target_duration_sec: Optional[int] = None,
+    submit_time_str: Optional[str] = None,
+    safe_login_time_str: Optional[str] = None,
+):
     """Alerts when a Quiz solving process begins."""
     limit_str = f"{time_limit_sec // 60}m {time_limit_sec % 60}s" if time_limit_sec else "Auto-detected"
+    target_str = f"{target_duration_sec // 60}m {target_duration_sec % 60}s" if target_duration_sec else "50% timer"
+
     msg = (
         "🚀 <b>Quiz Solving Started!</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"📚 <b>Subject:</b> {html.escape(subject)}\n"
         f"📝 <b>Quiz:</b> {html.escape(title)}\n"
         f"🆔 <b>Task ID:</b> <code>{html.escape(task_id)}</code>\n"
-        f"⏱️ <b>Time Limit:</b> {limit_str}\n"
+        f"⏱️ <b>Total Time Limit:</b> {limit_str}\n"
+        f"⏳ <b>50% Submit Timer:</b> {target_str}"
+    )
+    if submit_time_str:
+        msg += f" (Approx <b>{submit_time_str}</b>)\n"
+    else:
+        msg += "\n"
+
+    msg += "━━━━━━━━━━━━━━━━━━\n"
+    if safe_login_time_str:
+        msg += (
+            f"🔐 <b>Aap Portal kab Login karein:</b> <b>{safe_login_time_str} ke baad</b>\n"
+            "⚠️ <i>Tab tak portal bilkul login/open na karein taaki bot bina rukawat submit kar sake!</i>\n"
+        )
+    else:
+        msg += (
+            "🔐 <b>Aap Portal kab Login karein:</b> 50% timer complete hone ke baad\n"
+            "⚠️ <i>Tab tak portal open na karein taaki bot submit kar sake.</i>\n"
+        )
+
+    msg += (
         "━━━━━━━━━━━━━━━━━━\n"
-        "⚡ <i>Questions extract kiye ja rahe hain aur AI se answers generate ho rahe hain...</i>\n"
+        "⚡ <i>Questions extract ho rahe hain aur AI se answers generate ho rahe hain...</i>\n"
         "📲 <i>Kuch hi seconds me complete solutions yahan deliver ho jayenge!</i>"
     )
     send_telegram_message(msg, parse_mode="HTML")
 
 
-def notify_quiz_solutions(subject: str, title: str, task_id: str, qa_list: List[Dict[str, Any]]):
+def notify_quiz_solutions(
+    subject: str,
+    title: str,
+    task_id: str,
+    qa_list: List[Dict[str, Any]],
+    submit_time_str: Optional[str] = None,
+    safe_login_time_str: Optional[str] = None,
+):
     """Sends all extracted quiz questions and answers to Telegram."""
     header = (
         "📋 <b>Quiz Questions &amp; Answers</b>\n"
@@ -173,10 +210,18 @@ def notify_quiz_solutions(subject: str, title: str, task_id: str, qa_list: List[
         blocks.append(block)
 
     body = "\n\n".join(blocks)
-    footer = (
-        "\n\n━━━━━━━━━━━━━━━━━━\n"
-        "⏱️ <i>Sabhi options portal par tick kar diye gaye hain. 50% safety timer ke sath auto-submit hoga.</i>"
-    )
+    footer = "\n\n━━━━━━━━━━━━━━━━━━\n"
+    if submit_time_str and safe_login_time_str:
+        footer += (
+            f"⏱️ <b>Auto-Submit Target:</b> ~<b>{submit_time_str}</b> (50% mark)\n"
+            f"🔐 <b>Aap Portal Login Karein:</b> <b>{safe_login_time_str} ke baad</b>\n"
+            "✅ <i>Sabhi options portal par tick kar diye gaye hain. Timer complete hone par submit ho jayega.</i>"
+        )
+    else:
+        footer += (
+            "⏱️ <i>Sabhi options portal par tick kar diye gaye hain. 50% safety timer ke sath auto-submit hoga.</i>\n"
+            "🔐 <i>Aap 50% time ke baad hi login karke check karein.</i>"
+        )
 
     full_message = header + body + footer
     send_telegram_message(full_message, parse_mode="HTML")
