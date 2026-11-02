@@ -59,7 +59,7 @@ jobs:
           CHECK_INTERVAL_SECONDS=900
           SERVER_ERROR_WAIT_SECONDS=300
           MAX_RETRIES=3
-          QUIZ_SAFETY_TIMER_RATIO=0.80
+          QUIZ_SAFETY_TIMER_RATIO=0.50
           GMAIL_USER=${{ secrets.GMAIL_USER || secrets.PORTAL_USERNAME }}
           GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
           EOF
