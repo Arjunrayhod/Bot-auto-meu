@@ -20,18 +20,35 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANSWER_BANK_PATH = os.path.join(BASE_DIR, "state", "answer_bank.json")
 
 
-def _call_gemini_api(prompt: str, system_instruction: str = "", json_mode: bool = False) -> str:
-    """Invokes Google Gemini Generative Language API directly using x-goog-api-key."""
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+# Track key rotation index
+CURRENT_KEY_INDEX = 0
 
-    if not api_key:
+
+def get_gemini_keys() -> List[str]:
+    """Retrieves all configured Gemini API keys from comma-separated list."""
+    raw = os.getenv("GEMINI_API_KEY", "").strip()
+    keys = [k.strip() for k in raw.split(",") if k.strip()]
+    return keys
+
+
+def _call_gemini_api(prompt: str, system_instruction: str = "", json_mode: bool = False) -> str:
+    """
+    Invokes Google Gemini with:
+    1. Multi-key pool rotation on rate limits (429/403).
+    2. Model fallback chain (gemini-3.5-flash-lite -> gemini-2.5-flash -> gemini-1.5-flash).
+    3. Strict maxOutputTokens to reduce token burn by ~90%.
+    4. Emergency fallback to Groq if Gemini hits quota.
+    """
+    global CURRENT_KEY_INDEX
+    keys = get_gemini_keys()
+    if not keys:
         raise ValueError("GEMINI_API_KEY is not set in .env")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    headers = {
-        "Content-Type": "application/json",
-    }
+    configured_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+    model_pool = [configured_model]
+    for fallback in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]:
+        if fallback not in model_pool:
+            model_pool.append(fallback)
 
     full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
     payload: Dict[str, Any] = {
@@ -41,25 +58,60 @@ def _call_gemini_api(prompt: str, system_instruction: str = "", json_mode: bool 
             }
         ],
         "generationConfig": {
-            "temperature": 0.2,
+            "temperature": 0.1 if json_mode else 0.2,
+            # Limit token burn strictly: 180 tokens for JSON quizzes, 2500 for assignments
+            "maxOutputTokens": 180 if json_mode else 2500,
         }
     }
     if json_mode:
         payload["generationConfig"]["responseMimeType"] = "application/json"
 
-    resp = requests.post(url, headers=headers, json=payload, timeout=45)
-    if not resp.ok:
-        raise RuntimeError(f"Gemini API error ({resp.status_code}): {resp.text}")
+    last_error = None
 
-    data = resp.json()
-    candidates = data.get("candidates", [])
-    if not candidates:
-        raise RuntimeError("No generation candidates returned from Gemini.")
+    # Try through all keys in the pool
+    for key_attempt in range(len(keys)):
+        active_key = keys[(CURRENT_KEY_INDEX + key_attempt) % len(keys)]
 
-    text_parts = candidates[0].get("content", {}).get("parts", [])
-    if not text_parts:
-        return ""
-    return text_parts[0].get("text", "").strip()
+        for model in model_pool:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={active_key}"
+            headers = {"Content-Type": "application/json"}
+
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=45)
+
+                if resp.status_code == 429:
+                    logger.warning(f"Key #{active_key[:8]}... rate-limited (429) on {model}. Rotating...")
+                    last_error = f"Rate limit 429 on {model}"
+                    continue
+                elif resp.status_code in (401, 403):
+                    logger.warning(f"Key #{active_key[:8]}... auth error ({resp.status_code}). Rotating to next key...")
+                    last_error = f"Auth error {resp.status_code}"
+                    break
+                elif not resp.ok:
+                    last_error = f"HTTP {resp.status_code}: {resp.text[:120]}"
+                    continue
+
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    continue
+
+                text_parts = candidates[0].get("content", {}).get("parts", [])
+                if text_parts:
+                    CURRENT_KEY_INDEX = (CURRENT_KEY_INDEX + key_attempt) % len(keys)
+                    return text_parts[0].get("text", "").strip()
+
+            except Exception as e:
+                last_error = str(e)
+                continue
+
+    # Automatic Emergency Failover to Groq if Gemini is exhausted
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if groq_key:
+        logger.warning(f"Gemini pool exhausted ({last_error}). Triggering automatic failover to Groq!")
+        return _call_groq_api(prompt, system_instruction=system_instruction, json_mode=json_mode)
+
+    raise RuntimeError(f"All Gemini API keys and models exhausted. Last error: {last_error}")
 
 
 def _call_groq_api(prompt: str, system_instruction: str = "", json_mode: bool = False) -> str:
