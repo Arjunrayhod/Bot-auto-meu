@@ -46,8 +46,13 @@ def handle_sigint(signum, frame):
     RUNNING = False
 
 
-signal.signal(signal.SIGINT, handle_sigint)
-signal.signal(signal.SIGTERM, handle_sigint)
+try:
+    import threading
+    if threading.current_thread() is threading.main_thread():
+        signal.signal(signal.SIGINT, handle_sigint)
+        signal.signal(signal.SIGTERM, handle_sigint)
+except (ValueError, AttributeError):
+    pass
 
 
 def run_single_cycle() -> int:
