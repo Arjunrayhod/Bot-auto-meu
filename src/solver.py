@@ -118,7 +118,7 @@ def _call_groq_api(prompt: str, system_instruction: str = "", json_mode: bool = 
     """Invokes Groq API using OpenAI client format."""
     from openai import OpenAI
     api_key = os.getenv("GROQ_API_KEY", "").strip()
-    model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b").strip()
     base_url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").strip()
 
     if not api_key:
@@ -126,6 +126,9 @@ def _call_groq_api(prompt: str, system_instruction: str = "", json_mode: bool = 
 
     client = OpenAI(api_key=api_key, base_url=base_url)
     messages = []
+    if json_mode and "json" not in (system_instruction or "").lower() and "json" not in prompt.lower():
+        system_instruction = f"{system_instruction} Output strictly in JSON format.".strip()
+
     if system_instruction:
         messages.append({"role": "system", "content": system_instruction})
     messages.append({"role": "user", "content": prompt})
