@@ -1,14 +1,5 @@
 [
   {
-    "title": "Unit 4",
-    "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=2UEnMgpVoSame34nURDCq4xxz1NALcJ-jmUsFwPjFXFKDrpKCgi75RotD7jkORMC",
-    "due_date": "2026-11-06",
-    "days_left": 4,
-    "is_submitted": false,
-    "due_date_str": "06-11-2026",
-    "unit": "4 - Switching techniques"
-  },
-  {
     "title": "Assignment",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=1LGW9FTb-iLxQ7ALk6vW-wt-s0tovyPlxbrvfmIjog2uqFGJdKQD9QSJDhs50oaf",
     "due_date": "2026-11-06",
@@ -74,20 +65,15 @@
   {
     "title": "Assignment 1: Basics of C++ Programming",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=LVk9G1xC1bEmSsLdiL8KlAf79ZceCadh-c5SXfVHGyxNtJtpftQwQhfq9kCCNz8T",
-    "due_date": null,
-    "days_left": null,
-    "is_submitted": false
+    "due_date": "2026-11-15",
+    "days_left": 13,
+    "is_submitted": false,
+    "due_date_str": "15-11-2026",
+    "unit": "1 - Unit I: Introduction to Basic Programming Concepts"
   },
   {
     "title": "Assignment 2: Decision Making, Loops, Arrays and Pointers",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=2HxKPJ10Oy6UNMCk0WZPfb2LJctKAfCc4Xtf7c2iUL3z--eXfsIZDDSDyuvcIkbk",
-    "due_date": null,
-    "days_left": null,
-    "is_submitted": false
-  },
-  {
-    "title": "Assignment 5: Inheritance, Operator Overloading and Friend Functions",
-    "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=HsBhS5MHPoGDo8WlrmAUuR2RGZnRzyUU8yCdbSZ33rrGbAkJV9SeMXbb_KoIkrhK",
     "due_date": null,
     "days_left": null,
     "is_submitted": false
