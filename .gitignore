@@ -1,0 +1,29 @@
+# Local environment and credentials (CRITICAL: Never commit .env with passwords)
+.env
+.env.local
+
+# Python caches and virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+
+# Playwright and Browser binaries
+.playwright/
+ms-playwright/
+
+# Downloads and temporary test outputs
+downloads/
+scratch/
+bot.log
+state/login_page.png
+state/auth_state.json
+
+# IDE / OS metadata
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

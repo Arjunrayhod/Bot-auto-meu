@@ -1,0 +1,80 @@
+{
+  "quizzes": {},
+  "notifications": {
+    "f3c83c27f962": {
+      "title": "New Assignment Update Available on ERP",
+      "status": "completed",
+      "timestamp": "2026-11-02 20:00:09",
+      "metadata": {}
+    }
+  },
+  "practicals": {},
+  "assignments": {
+    "9f89b547adce": {
+      "title": "Assignment",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:26:53",
+      "metadata": {}
+    },
+    "dd7534a688fe": {
+      "title": "Assignment 1",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:28:03",
+      "metadata": {}
+    },
+    "7529632d0163": {
+      "title": "Assignment 2",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:28:47",
+      "metadata": {}
+    },
+    "f33546aaca5a": {
+      "title": "Assignment 3",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:29:29",
+      "metadata": {}
+    },
+    "2c50d0de852c": {
+      "title": "Assignment 4",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:30:24",
+      "metadata": {}
+    },
+    "38dc6fed8e19": {
+      "title": "Assignment 5",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:31:18",
+      "metadata": {}
+    },
+    "499fc8c6d959": {
+      "title": "Assignment 5: Server-Side PHP Scripting & Database Form Integration",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:32:31",
+      "metadata": {}
+    },
+    "9bb900879469": {
+      "title": "Assignment 1: Basics of C++ Programming",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:33:25",
+      "metadata": {}
+    },
+    "bd95f0f6d8b1": {
+      "title": "Assignment 2: Decision Making, Loops, Arrays and Pointers",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:34:31",
+      "metadata": {}
+    },
+    "5eeedcc0bf2b": {
+      "title": "Assignment 5: Inheritance, Operator Overloading and Friend Functions",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:35:26",
+      "metadata": {}
+    },
+    "d1f5a4b96e9b": {
+      "title": "ASSIGNMENT UNIT 5",
+      "status": "completed",
+      "timestamp": "2026-11-02 19:36:01",
+      "metadata": {}
+    }
+  }
+}

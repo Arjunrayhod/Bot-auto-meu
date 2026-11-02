@@ -1,0 +1,13 @@
+{
+  "answers": {
+    "086535568f3311aa8af18b03bba87b64": {
+      "question": "Which symbol is used for scope resolution in C++?",
+      "result": {
+        "selected_index": 0,
+        "selected_option": "::",
+        "reasoning": "The double colon (::) is the scope resolution operator in C++ used to identify and access identifiers belonging to a specific namespace, class, or scope.",
+        "source": "llm_gemini"
+      }
+    }
+  }
+}
