@@ -148,10 +148,21 @@ def extract_tasks_from_page(page: Page) -> List[Dict[str, Any]]:
         if not task_id:
             task_id = _generate_task_id(title, category, row_text[:50])
 
+        # Check cells for potential subject name
+        subject_hint = ""
+        tds = row.locator("td")
+        if tds.count() >= 3:
+            for td_idx in range(min(tds.count(), 4)):
+                t_val = tds.nth(td_idx).inner_text().strip()
+                if len(t_val) > 3 and not any(k in t_val.lower() for k in ["quiz", "test", "attempt", "view", "start", "submit", "status", "date", "http"]):
+                    subject_hint = t_val
+                    break
+
         detected_tasks.append({
             "task_id": task_id,
             "title": title,
             "category": category,
+            "subject": subject_hint,
             "href": href,
             "locator": action_link,
             "row_info": row_text.replace("\n", " | ")[:120],
@@ -260,7 +271,7 @@ def scan_dashboard_and_process_tasks(page: Page) -> int:
             # Route to respective processor
             success = False
             if category == "quizzes":
-                success = process_quiz(task_page, task_id, title)
+                success = process_quiz(task_page, task_id, title, subject=task.get("subject"))
             elif category == "assignments":
                 success = process_assignment(task_page, task_id, title)
             elif category == "practicals":

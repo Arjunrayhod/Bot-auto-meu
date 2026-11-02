@@ -5,9 +5,10 @@ Complies with Telegram's 4096-character message limits and incorporates rate-lim
 
 import os
 import time
+import html
 import logging
 import requests
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -131,18 +132,72 @@ def notify_server_error(attempt: int, max_retries: int, status_code: int, wait_m
     send_telegram_message(msg, parse_mode="HTML")
 
 
-def notify_quiz_completed(title: str, task_id: str, score: Optional[str] = None, elapsed: Optional[str] = None):
+def notify_quiz_started(subject: str, title: str, task_id: str, time_limit_sec: Optional[int] = None):
+    """Alerts when a Quiz solving process begins."""
+    limit_str = f"{time_limit_sec // 60}m {time_limit_sec % 60}s" if time_limit_sec else "Auto-detected"
+    msg = (
+        "🚀 <b>Quiz Solving Started!</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        f"📚 <b>Subject:</b> {html.escape(subject)}\n"
+        f"📝 <b>Quiz:</b> {html.escape(title)}\n"
+        f"🆔 <b>Task ID:</b> <code>{html.escape(task_id)}</code>\n"
+        f"⏱️ <b>Time Limit:</b> {limit_str}\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "⚡ <i>Questions extract kiye ja rahe hain aur AI se answers generate ho rahe hain...</i>\n"
+        "📲 <i>Kuch hi seconds me complete solutions yahan deliver ho jayenge!</i>"
+    )
+    send_telegram_message(msg, parse_mode="HTML")
+
+
+def notify_quiz_solutions(subject: str, title: str, task_id: str, qa_list: List[Dict[str, Any]]):
+    """Sends all extracted quiz questions and answers to Telegram."""
+    header = (
+        "📋 <b>Quiz Questions &amp; Answers</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        f"📚 <b>Subject:</b> {html.escape(subject)}\n"
+        f"📝 <b>Quiz:</b> {html.escape(title)}\n"
+        f"🆔 <b>ID:</b> <code>{html.escape(task_id)}</code>\n"
+        f"🔢 <b>Total Questions:</b> {len(qa_list)}\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+    )
+
+    blocks = []
+    for item in qa_list:
+        num = item.get("num", 1)
+        q = html.escape(item.get("question", "").strip())
+        ans = html.escape(item.get("selected_opt", "").strip())
+        reason = html.escape(item.get("reason", "").strip()) if item.get("reason") else ""
+        block = f"<b>Q{num}.</b> {q}\n👉 <b>Ans:</b> <code>{ans}</code>"
+        if reason:
+            block += f"\n💡 <i>{reason}</i>"
+        blocks.append(block)
+
+    body = "\n\n".join(blocks)
+    footer = (
+        "\n\n━━━━━━━━━━━━━━━━━━\n"
+        "⏱️ <i>Sabhi options portal par tick kar diye gaye hain. 50% safety timer ke sath auto-submit hoga.</i>"
+    )
+
+    full_message = header + body + footer
+    send_telegram_message(full_message, parse_mode="HTML")
+
+
+def notify_quiz_completed(title: str, task_id: str, score: Optional[str] = None, elapsed: Optional[str] = None, subject: Optional[str] = None):
     """Alerts when a Quiz is submitted successfully."""
     msg = (
-        f"✅ <b>Quiz Auto-Submitted Successfully</b>\n"
-        f"━━━━━━━━━━━━━━━━━━\n"
-        f"📝 <b>Quiz:</b> {title}\n"
-        f"🆔 <b>ID:</b> {task_id}\n"
+        "✅ <b>Quiz Auto-Submitted Successfully</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+    )
+    if subject:
+        msg += f"📚 <b>Subject:</b> {html.escape(subject)}\n"
+    msg += (
+        f"📝 <b>Quiz:</b> {html.escape(title)}\n"
+        f"🆔 <b>ID:</b> <code>{html.escape(task_id)}</code>\n"
     )
     if elapsed:
         msg += f"⏱️ <b>Time Elapsed:</b> {elapsed}\n"
     if score:
-        msg += f"🏆 <b>Score:</b> {score}\n"
+        msg += f"🏆 <b>Score:</b> {html.escape(score)}\n"
     send_telegram_message(msg, parse_mode="HTML")
 
 

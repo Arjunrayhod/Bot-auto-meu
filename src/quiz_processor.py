@@ -14,13 +14,16 @@ from playwright.sync_api import Page, Locator
 
 from dotenv import load_dotenv
 from src.solver import solve_quiz_question
-from src.notifier import notify_quiz_completed, notify_fatal_alert
+from src.notifier import (
+    notify_quiz_started,
+    notify_quiz_solutions,
+    notify_quiz_completed,
+    notify_fatal_alert,
+)
 
 load_dotenv(override=True)
 
 logger = logging.getLogger("academic_bot.quiz_processor")
-
-SAFETY_RATIO = float(os.getenv("QUIZ_SAFETY_TIMER_RATIO", "0.80"))
 
 
 def parse_time_limit_seconds(page: Page) -> Optional[int]:
@@ -56,6 +59,46 @@ def parse_time_limit_seconds(page: Page) -> Optional[int]:
                 return int(match_mins.group(1)) * 60
 
     return None
+
+
+def detect_subject_name(page: Page, title: str, hint_subject: Optional[str] = None) -> str:
+    """
+    Extracts subject/course name from page elements, task hints, or quiz title.
+    """
+    if hint_subject and len(hint_subject.strip()) > 2 and not any(w in hint_subject.lower() for w in ["quiz", "test", "exam", "assessment"]):
+        return hint_subject.strip()
+
+    subject_selectors = [
+        "span[id*='lblSubject']",
+        "span[id*='lblCourse']",
+        "span[id*='Subject']",
+        "span[id*='Course']",
+        "span[id*='Paper']",
+        "td:has-text('Subject') + td",
+        "td:has-text('Course') + td",
+        "div:has-text('Subject:')",
+    ]
+    for sel in subject_selectors:
+        try:
+            loc = page.locator(sel)
+            if loc.count() > 0 and loc.first.is_visible():
+                txt = loc.first.inner_text().strip()
+                if "Subject:" in txt:
+                    txt = txt.split("Subject:")[-1].strip()
+                elif "Course:" in txt:
+                    txt = txt.split("Course:")[-1].strip()
+                if txt and len(txt) > 2 and not any(w in txt.lower() for w in ["subject", "course", "quiz", "test"]):
+                    return txt
+        except Exception:
+            pass
+
+    # Clean title prefixes/suffixes like 'Quiz 4 - ...' or '... - Quiz 1'
+    cleaned = re.sub(r"^(?:quiz|test|assessment|mst|cia)\s*\d*\s*[-:]\s*", "", title, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\s*[-:]\s*(?:quiz|test|assessment|mst|cia)\s*\d*$", "", cleaned, flags=re.IGNORECASE).strip()
+    if cleaned and not any(w == cleaned.lower() for w in ["quiz", "test", "exam", "assessment"]):
+        return cleaned
+
+    return title
 
 
 def extract_questions_from_page(page: Page) -> List[Dict[str, Any]]:
@@ -172,13 +215,15 @@ def extract_questions_from_page(page: Page) -> List[Dict[str, Any]]:
     return questions
 
 
-def process_quiz(page: Page, task_id: str, title: str) -> bool:
+def process_quiz(page: Page, task_id: str, title: str, subject: Optional[str] = None) -> bool:
     """
     Main entry point to execute an online quiz:
-    1. Parses total questions & allowed time limit.
-    2. Answers questions with humanized delays.
-    3. Waits for 80% safety timer boundary.
-    4. Submits and records results.
+    1. Detects subject name and allowed time limit.
+    2. Sends immediate 'Quiz Started' alert to Telegram with subject name.
+    3. Answers questions via Gemini AI with humanized delays.
+    4. Delivers complete Questions & Answers to Telegram.
+    5. Waits for safety timer boundary (e.g. 50%).
+    6. Submits and records results.
     """
     logger.info(f"Starting Quiz Processor for: '{title}' (ID: {task_id})")
     start_time = time.time()
@@ -186,17 +231,28 @@ def process_quiz(page: Page, task_id: str, title: str) -> bool:
     # Automatically accept JavaScript alerts / confirm dialogs on submit
     page.on("dialog", lambda dialog: dialog.accept())
 
-    # Detect time limit
+    # Detect subject name
+    subject_name = detect_subject_name(page, title, hint_subject=subject)
+    logger.info(f"Detected Subject: '{subject_name}'")
+
+    # Detect time limit and compute safety duration
+    safety_ratio = float(os.getenv("QUIZ_SAFETY_TIMER_RATIO", "0.50"))
     time_limit_sec = parse_time_limit_seconds(page)
     if time_limit_sec:
-        target_duration = int(time_limit_sec * SAFETY_RATIO)
-        logger.info(f"Quiz time limit detected: {time_limit_sec}s. Target submission time: {target_duration}s (80%).")
+        target_duration = int(time_limit_sec * safety_ratio)
+        logger.info(f"Quiz time limit detected: {time_limit_sec}s. Target submission time: {target_duration}s ({int(safety_ratio * 100)}%).")
     else:
         # Default safety duration if no explicit countdown is found
         target_duration = random.randint(120, 240)
         logger.info(f"No explicit countdown found. Defaulting safety pacing to {target_duration}s.")
 
-    # Extract questions
+    # 1. Immediate Telegram Alert: Quiz Started
+    try:
+        notify_quiz_started(subject=subject_name, title=title, task_id=task_id, time_limit_sec=time_limit_sec)
+    except Exception as e:
+        logger.warning(f"Failed to send quiz started alert: {e}")
+
+    # 2. Extract questions
     questions = extract_questions_from_page(page)
     if not questions:
         logger.error(f"Could not parse any questions on page for quiz '{title}'.")
@@ -204,7 +260,8 @@ def process_quiz(page: Page, task_id: str, title: str) -> bool:
 
     logger.info(f"Successfully extracted {len(questions)} questions. Beginning answering loop...")
 
-    # Answer loop with human delays
+    solved_qa = []
+    # 3. Answering loop with human delays
     for i, q in enumerate(questions, 1):
         q_text = q["text"]
         opts_text = [o["text"] for o in q["options"]]
@@ -212,8 +269,11 @@ def process_quiz(page: Page, task_id: str, title: str) -> bool:
         logger.info(f"Solving Q{i}/{len(questions)}: '{q_text[:60]}...'")
         sol = solve_quiz_question(q_text, opts_text)
         selected_index = sol.get("selected_index", 0)
+        reasoning = sol.get("reasoning", "")
 
+        selected_opt_text = "N/A"
         if 0 <= selected_index < len(q["options"]):
+            selected_opt_text = q["options"][selected_index]["text"]
             target_radio: Locator = q["options"][selected_index]["locator"]
             # Human-like delay before click
             delay = random.uniform(2.0, 4.5)
@@ -223,21 +283,36 @@ def process_quiz(page: Page, task_id: str, title: str) -> bool:
             try:
                 target_radio.scroll_into_view_if_needed()
                 target_radio.click(force=True)
-                logger.info(f"Selected option {selected_index + 1}: {q['options'][selected_index]['text']}")
+                logger.info(f"Selected option {selected_index + 1}: {selected_opt_text}")
             except Exception as e:
                 logger.warning(f"Error clicking option {selected_index} for Q{i}: {e}")
+        elif opts_text:
+            selected_opt_text = opts_text[0]
 
-    # Safety Timer Wait: Wait until 80% of allowed time has elapsed
+        solved_qa.append({
+            "num": i,
+            "question": q_text,
+            "selected_opt": selected_opt_text,
+            "reason": reasoning,
+        })
+
+    # 4. Deliver complete Questions & Answers to Telegram
+    try:
+        notify_quiz_solutions(subject=subject_name, title=title, task_id=task_id, qa_list=solved_qa)
+    except Exception as e:
+        logger.error(f"Failed to send quiz solutions to Telegram: {e}")
+
+    # 5. Safety Timer Wait: Wait until safety ratio (50%) of allowed time has elapsed
     elapsed = time.time() - start_time
     remaining_wait = target_duration - elapsed
     if remaining_wait > 0:
-        logger.info(f"Holding for safety timer: Waiting {remaining_wait:.1f}s to reach {SAFETY_RATIO * 100}% threshold...")
+        logger.info(f"Holding for safety timer: Waiting {remaining_wait:.1f}s to reach {int(safety_ratio * 100)}% threshold...")
         time.sleep(remaining_wait)
 
     total_elapsed = int(time.time() - start_time)
     elapsed_str = f"{total_elapsed // 60}m {total_elapsed % 60}s"
 
-    # Submit Quiz
+    # 6. Submit Quiz
     logger.info("Submitting quiz...")
     submit_selectors = [
         "input[type='submit'][id*='btnSubmit']",
@@ -273,5 +348,5 @@ def process_quiz(page: Page, task_id: str, title: str) -> bool:
         score = score_loc.first.inner_text().strip()
 
     logger.info(f"Quiz '{title}' submitted successfully! Elapsed: {elapsed_str}, Score: {score or 'Recorded'}")
-    notify_quiz_completed(title=title, task_id=task_id, score=score, elapsed=elapsed_str)
+    notify_quiz_completed(title=title, task_id=task_id, score=score, elapsed=elapsed_str, subject=subject_name)
     return True
