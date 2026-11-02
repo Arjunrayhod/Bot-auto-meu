@@ -36,9 +36,14 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
-      - name: Inject Environment Secrets
+      - name: Inject Environment Configuration
+        env:
+          ENV_SECRET: ${{ secrets.ENV_FILE }}
         run: |
-          cat << 'EOF' > .env
+          if [ -n "$ENV_SECRET" ]; then
+            echo "$ENV_SECRET" > .env
+          else
+            cat << 'EOF' > .env
           PORTAL_LOGIN_URL=${{ secrets.PORTAL_LOGIN_URL || 'https://meu.gnums.co.in/Login.aspx' }}
           PORTAL_DASHBOARD_URL=${{ secrets.PORTAL_DASHBOARD_URL || 'https://meu.gnums.co.in/StudentPanel/StudentDashboard.aspx' }}
           PORTAL_ROLE=${{ secrets.PORTAL_ROLE || 'Student' }}
@@ -58,6 +63,7 @@ jobs:
           GMAIL_USER=${{ secrets.GMAIL_USER || secrets.PORTAL_USERNAME }}
           GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
           EOF
+          fi
 
       - name: Execute Autonomous Academic Bot Cycle
         run: |
