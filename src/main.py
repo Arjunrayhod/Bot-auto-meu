@@ -26,13 +26,14 @@ from src.email_listener import gmail_listener, check_gmail_for_meu_alerts
 load_dotenv(override=True)
 
 # Logging Configuration
+_bot_handlers = [logging.FileHandler(os.path.join(BASE_DIR, "bot.log"), encoding="utf-8")]
+if sys.stdout is not None:
+    _bot_handlers.append(logging.StreamHandler(sys.stdout))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] [%(name)s]: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(os.path.join(BASE_DIR, "bot.log"), encoding="utf-8"),
-    ],
+    handlers=_bot_handlers,
 )
 logger = logging.getLogger("academic_bot.main")
 
@@ -183,12 +184,15 @@ def main():
         interactive_listener.start()
         # Start background Gmail sniper listener
         gmail_listener.start()
+        # Start exact-time Quiz Sniper worker
+        from src.sniper import quiz_sniper
+        quiz_sniper.start()
 
         send_telegram_message(
             f"🚀 <b>Academic & Quiz Auto-Bot Activated</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"🤖 <b>AI Engine:</b> Gemini AI\n"
-            f"⏱️ <b>Check Interval:</b> Every {max(1, args.interval // 60)} min\n"
+            f"🎯 <b>Exact-Time Quiz Sniper:</b> Active & Armed\n"
             f"⚡ <b>Auto Quiz Solve:</b> Enabled (80% Safety Timer)\n"
             f"📡 <b>Status:</b> Actively monitoring portal 24/7.",
             parse_mode="HTML",
@@ -208,6 +212,7 @@ def main():
         finally:
             interactive_listener.stop()
             gmail_listener.stop()
+            quiz_sniper.stop()
 
         logger.info("Daemon gracefully exited.")
     else:

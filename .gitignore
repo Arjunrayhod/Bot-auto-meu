@@ -19,8 +19,10 @@ ms-playwright/
 downloads/
 scratch/
 bot.log
+watchdog.log
 state/login_page.png
 state/auth_state.json
+state/watchdog.pid
 
 # IDE / OS metadata
 .idea/

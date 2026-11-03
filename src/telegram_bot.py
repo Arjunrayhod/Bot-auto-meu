@@ -31,12 +31,12 @@ def get_main_menu_markup() -> Dict[str, Any]:
                 {"text": "📊 Check Attendance", "callback_data": "btn_attendance"},
             ],
             [
-                {"text": "🎯 Test & MST Marks", "callback_data": "btn_marks"},
+                {"text": "📝 Online Quizzes / Tests", "callback_data": "btn_tests"},
                 {"text": "⏳ Pending Deadlines", "callback_data": "btn_deadlines"},
             ],
             [
+                {"text": "🎯 Test & MST Marks", "callback_data": "btn_marks"},
                 {"text": "⚠️ Low Attendance Alert", "callback_data": "btn_low_attendance"},
-                {"text": "📅 Mid Exam Schedule", "callback_data": "btn_exams"},
             ],
             [
                 {"text": "🔄 Sync Portal Now", "callback_data": "btn_sync"},
@@ -50,9 +50,9 @@ def get_reply_keyboard_markup() -> Dict[str, Any]:
     """Generates a persistent quick-access keyboard above the chat input."""
     return {
         "keyboard": [
-            [{"text": "⚡ Scan & Solve Work"}, {"text": "📊 Check Attendance"}],
-            [{"text": "🎯 Test & MST Marks"}, {"text": "⏳ Deadlines"}],
-            [{"text": "⚠️ Low Attendance"}, {"text": "📋 Main Menu"}],
+            [{"text": "⚡ Scan & Solve Work"}, {"text": "📝 Online Quizzes / Tests"}],
+            [{"text": "📊 Check Attendance"}, {"text": "⏳ Deadlines"}],
+            [{"text": "🎯 Test & MST Marks"}, {"text": "📋 Main Menu"}],
         ],
         "resize_keyboard": True,
         "is_persistent": True,
@@ -66,14 +66,13 @@ def send_menu(chat_id: str, text: Optional[str] = None):
         "━━━━━━━━━━━━━━━━━━\n"
         "Welcome! Kisi bhi option ke liye neeche button dabayein ya chat me keyword likhein:\n\n"
         "💬 <b>Chat Commands / Keywords:</b>\n"
-        "• <code>/scan</code> ya <code>solve</code> ➔ Naye assignments/quizzes scan &amp; solve karega\n"
-        "• <code>/marks</code> ya <code>mst</code> ➔ Test marks &amp; MST score\n"
+        "• <code>/tests</code> ya <code>quiz</code> ➔ Live Quizzes/Tests (Date, Time, Duration &amp; Status)\n"
+        "• <code>/scan</code> ya <code>solve</code> ➔ Naye assignments/quizzes scan &amp; auto-solve\n"
+        "• <code>/deadlines</code> ya <code>assignment</code> ➔ Assignment dates &amp; timer\n"
         "• <code>/attendance</code> ya <code>haziri</code> ➔ Attendance report\n"
         "• <code>/low</code> ya <code>shortage</code> ➔ Low attendance (&lt;75%) alert\n"
-        "• <code>/deadlines</code> ya <code>assignment</code> ➔ Assignment dates &amp; timer\n"
-        "• <code>/exam</code> ya <code>schedule</code> ➔ Exam schedule\n"
+        "• <code>/marks</code> ya <code>mst</code> ➔ Test marks &amp; MST score\n"
         "• <code>/sync</code> ya <code>refresh</code> ➔ Portal se fresh data reload\n"
-        "• <code>/menu</code> ya <code>help</code> ➔ Ye menu show karega\n"
         "• <code>/status</code> ➔ Bot 24/7 background status"
     )
     payload = {
@@ -204,6 +203,38 @@ def handle_deadlines_request(chat_id: str):
             logger.error(f"Error fetching deadlines: {e}")
 
     report = format_deadlines_report(cached)
+    payload = {
+        "chat_id": chat_id,
+        "text": report,
+        "parse_mode": "HTML",
+        "reply_markup": get_main_menu_markup(),
+    }
+    requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload, timeout=15)
+
+
+def handle_tests_request(chat_id: str, force_refresh: bool = False):
+    """Replies with live or cached LMS tests and quizzes schedule with timing and duration."""
+    from src.deadline_tracker import get_cached_tests, format_tests_report, extract_lms_tests
+
+    cached = get_cached_tests()
+    if not cached or force_refresh:
+        requests.post(
+            f"{TELEGRAM_API_URL}/sendMessage",
+            json={"chat_id": chat_id, "text": "⏳ <i>Checking LMS TEST LIST for upcoming & active quizzes...</i>", "parse_mode": "HTML"},
+            timeout=10,
+        )
+        try:
+            from playwright.sync_api import sync_playwright
+            from src.auth import get_authenticated_session
+            with sync_playwright() as p:
+                b, ctx, page = get_authenticated_session(p)
+                cached = extract_lms_tests(page)
+                ctx.close()
+                b.close()
+        except Exception as e:
+            logger.error(f"Error fetching LMS tests: {e}")
+
+    report = format_tests_report(cached)
     payload = {
         "chat_id": chat_id,
         "text": report,
@@ -378,8 +409,12 @@ def dispatch_action(action: str, chat_id: str):
     if act in ("btn_scan_solve", "⚡ scan & solve work", "/scan", "scan", "solve", "solve assignments", "scan now", "check work", "kuch naya aaya kya"):
         handle_scan_and_solve_request(chat_id)
 
+    # Online Quizzes & Tests Schedule
+    elif act in ("btn_tests", "📝 online quizzes / tests", "online quizzes / tests", "/tests", "/test", "/quiz", "/quizzes", "test", "tests", "quiz", "quizzes", "exam", "exams", "quiz timing", "test timing", "quiz kab hai"):
+        handle_tests_request(chat_id)
+
     # Marks & MST
-    elif act in ("btn_marks", "🎯 test & mst marks", "/marks", "marks", "mst", "test marks", "mst marks", "test", "result", "results", "grade", "grades", "/result", "/mst"):
+    elif act in ("btn_marks", "🎯 test & mst marks", "/marks", "marks", "mst", "test marks", "mst marks", "result", "results", "grade", "grades", "/result", "/mst"):
         handle_marks_request(chat_id)
 
     # Attendance
@@ -395,7 +430,7 @@ def dispatch_action(action: str, chat_id: str):
         handle_deadlines_request(chat_id)
 
     # Mid Exam Schedule
-    elif act in ("btn_exams", "📅 mid exam schedule", "🎯 mid exam schedule", "/exam", "exam", "exams", "schedule", "exam date", "timetable"):
+    elif act in ("btn_exams", "📅 mid exam schedule", "🎯 mid exam schedule", "schedule", "exam date", "timetable"):
         handle_exams_request(chat_id)
 
     # Bot Status

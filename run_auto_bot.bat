@@ -1,16 +1,16 @@
 @echo off
-title Academic & Quiz Auto-Bot Daemon
+title Academic & Quiz Auto-Bot Daemon (24/7 Watchdog)
 color 0A
 echo ===================================================
 echo     ACADEMIC & QUIZ AUTONOMOUS ASSISTANT BOT
 echo ===================================================
 echo Portal: https://meu.gnums.co.in/Login.aspx
-echo Mode  : 24/7 Continuous Monitoring & Auto-Submit
-echo AI    : Google Gemini 3.5 Flash
+echo Mode  : 24/7 Continuous Monitoring & Auto-Healing Watchdog
+echo AI    : Google Gemini AI
 echo ===================================================
 echo.
 
 cd /d "%~dp0"
-python -m src.main --daemon --interval 600
+python watchdog.py
 
 pause

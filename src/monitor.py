@@ -291,7 +291,67 @@ def scan_dashboard_and_process_tasks(page: Page) -> int:
             logger.error(f"Error processing {category} task '{title}': {e}")
             ledger.mark_seen(category, task_id, title, status=f"error: {e}")
 
-    # 2. Also check dedicated tabs/links if available (e.g. Side Menu -> Quizzes, Assignments, Practicals)
+    # 2. Check LMS Dashboard TEST LIST for active quizzes/tests
+    try:
+        lms_url = "https://meu.gnums.co.in/StudentPanel/LMS/LMS_ContentStudentDashboard.aspx"
+        logger.info(f"Scanning LMS Dashboard for active quizzes: {lms_url}")
+        page.goto(lms_url, wait_until="networkidle", timeout=30000)
+
+        rows = page.locator("table tr")
+        for i in range(rows.count()):
+            row = rows.nth(i)
+            r_text = row.inner_text().strip()
+            if not r_text or "Sr." in r_text:
+                continue
+
+            # Detect test row with an actual start/attempt button
+            action_btns = row.locator("a, button, input[type='submit']")
+            if action_btns.count() == 0:
+                continue
+
+            btn_txt = action_btns.first.inner_text().strip().lower()
+            btn_href = action_btns.first.get_attribute("href") or ""
+            is_start_action = (any(w in btn_txt for w in ["start", "attempt", "click here"]) or "start" in btn_href.lower()) and "not attempted" not in btn_txt and "over" not in r_text.lower()
+
+            if is_start_action:
+                cols = [c.inner_text().strip() for c in row.locator("td").all()]
+                subject = cols[3] if len(cols) > 3 else "Academic Subject"
+                test_name = cols[4] if len(cols) > 4 else "Online Quiz"
+                task_id = _generate_task_id(test_name, "quizzes", subject)
+
+                if not ledger.is_seen("quizzes", task_id):
+                    new_task_count += 1
+                    logger.info(f"ACTIVE QUIZ FOUND ON LMS: '{test_name}' - {subject}")
+                    notify_new_task(
+                        task_type="quiz",
+                        title=f"{test_name} ({subject})",
+                        task_id=task_id,
+                        extra=r_text.replace("\n", " ")[:120],
+                    )
+
+                    action_btn = action_btns.first
+                    context = page.context
+                    task_page = context.new_page()
+                    action_href = action_btn.get_attribute("href") or ""
+                    if action_href and not action_href.startswith("javascript"):
+                        task_page.goto(urljoin(page.url, action_href), wait_until="networkidle", timeout=35000)
+                    else:
+                        action_btn.click()
+                        page.wait_for_timeout(3000)
+                        task_page = page
+
+                    success = process_quiz(task_page, task_id, test_name, subject=subject)
+                    if success:
+                        ledger.mark_seen("quizzes", task_id, test_name, status="completed")
+                    else:
+                        ledger.mark_seen("quizzes", task_id, test_name, status="failed")
+
+                    if task_page != page:
+                        task_page.close()
+    except Exception as e:
+        logger.error(f"Error checking LMS TEST LIST for active quizzes: {e}")
+
+    # 3. Also check dedicated tabs/links if available (e.g. Side Menu -> Quizzes, Assignments, Practicals)
     side_menu_keywords = ["Quiz", "Assignment", "Practical"]
     for keyword in side_menu_keywords:
         try:

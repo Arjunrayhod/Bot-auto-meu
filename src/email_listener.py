@@ -8,6 +8,7 @@ sends instant Telegram advance alerts, and arms the autonomous solver.
 import os
 import re
 import time
+import json
 import email
 import imaplib
 import logging
@@ -71,6 +72,54 @@ def decode_str(s: Any) -> str:
     return text.strip()
 
 
+def clean_html_to_text(html_text: str) -> str:
+    """Converts HTML email payload into clean plain text with preserved line breaks."""
+    import html as html_lib
+    h = html_text
+    h = re.sub(r"(?i)<br\s*/?>", "\n", h)
+    h = re.sub(r"(?i)</?(?:p|tr|div|h\d)[^>]*>", "\n", h)
+    h = re.sub(r"(?i)<td[^>]*>", " ", h)
+    h = re.sub(r"<[^>]+>", "", h)
+    h = html_lib.unescape(h)
+    h = h.replace("\xa0", " ").replace("\u00a0", " ")
+    return h
+
+
+def extract_email_body(msg: email.message.Message) -> str:
+    """Extracts text content from email message, handling multipart and HTML-only formats."""
+    body_text = ""
+    html_text = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            ct = part.get_content_type()
+            cd = str(part.get("Content-Disposition") or "")
+            if "attachment" in cd:
+                continue
+            payload = part.get_payload(decode=True)
+            if not payload:
+                continue
+            charset = part.get_content_charset() or "utf-8"
+            decoded = payload.decode(charset, errors="replace")
+            if ct == "text/plain":
+                body_text += decoded + "\n"
+            elif ct == "text/html":
+                html_text += decoded + "\n"
+    else:
+        payload = msg.get_payload(decode=True)
+        if payload:
+            charset = msg.get_content_charset() or "utf-8"
+            decoded = payload.decode(charset, errors="replace")
+            if msg.get_content_type() == "text/html":
+                html_text = decoded
+            else:
+                body_text = decoded
+
+    final_text = body_text.strip()
+    if not final_text and html_text:
+        final_text = clean_html_to_text(html_text).strip()
+    return final_text
+
+
 def parse_quiz_schedule_email(subject: str, body: str) -> Optional[Dict[str, str]]:
     """
     Parses MEU GNUMS email structure:
@@ -79,8 +128,10 @@ def parse_quiz_schedule_email(subject: str, body: str) -> Optional[Dict[str, str
     Test Time :- 02:10 PM
     Test Duration :- 30 Min.
     """
-    lower_body = body.lower()
-    if "test has been scheduled" not in lower_body and "test schedule" not in subject.lower():
+    clean_body = body.replace("\xa0", " ").replace("\u00a0", " ")
+    clean_subject = subject.replace("\xa0", " ").replace("\u00a0", " ")
+
+    if "test has been scheduled" not in clean_body.lower() and "test schedule" not in clean_subject.lower():
         return None
 
     data: Dict[str, str] = {
@@ -93,31 +144,31 @@ def parse_quiz_schedule_email(subject: str, body: str) -> Optional[Dict[str, str
     }
 
     # Extract Course
-    course_match = re.search(r"Test Schedule for :-\s*([^\n\r]+)", subject, re.IGNORECASE)
+    course_match = re.search(r"Test\s*Schedule\s*for\s*:-\s*([^\n\r]+)", clean_subject, re.IGNORECASE)
     if not course_match:
-        course_match = re.search(r"([A-Za-z0-9\-]+ - [^\n\r]+?)\s+Test has been Scheduled", body, re.IGNORECASE)
+        course_match = re.search(r"([A-Za-z0-9\-]+\s*-\s*[^\n\r]+?)\s+Test\s+has\s+been\s+Scheduled", clean_body, re.IGNORECASE)
     if course_match:
-        data["course"] = course_match.group(1).strip()
+        data["course"] = re.sub(r"\s+", " ", course_match.group(1)).strip()
 
     # Extract Test Name
-    test_match = re.search(r"Test Name\s*:-\s*([^\n\r]+)", body, re.IGNORECASE)
+    test_match = re.search(r"Test\s*Name\s*:-\s*([^\n\r]+)", clean_body, re.IGNORECASE)
     if test_match:
-        data["test_name"] = test_match.group(1).strip()
+        data["test_name"] = re.sub(r"\s+", " ", test_match.group(1)).strip()
 
     # Extract Test Date
-    date_match = re.search(r"Test Date\s*:-\s*([^\n\r]+)", body, re.IGNORECASE)
+    date_match = re.search(r"Test\s*Date\s*:-\s*([^\n\r]+)", clean_body, re.IGNORECASE)
     if date_match:
-        data["date"] = date_match.group(1).strip()
+        data["date"] = re.sub(r"\s+", " ", date_match.group(1)).strip()
 
     # Extract Test Time
-    time_match = re.search(r"Test Time\s*:-\s*([^\n\r]+)", body, re.IGNORECASE)
+    time_match = re.search(r"Test\s*Time\s*:-\s*([^\n\r]+)", clean_body, re.IGNORECASE)
     if time_match:
-        data["time"] = time_match.group(1).strip()
+        data["time"] = re.sub(r"\s+", " ", time_match.group(1)).strip()
 
     # Extract Test Duration
-    dur_match = re.search(r"Test Duration\s*:-\s*([^\n\r]+)", body, re.IGNORECASE)
+    dur_match = re.search(r"Test\s*Duration\s*:-\s*([^\n\r]+)", clean_body, re.IGNORECASE)
     if dur_match:
-        data["duration"] = dur_match.group(1).strip()
+        data["duration"] = re.sub(r"\s+", " ", dur_match.group(1)).strip()
 
     return data
 
@@ -134,8 +185,8 @@ def format_quiz_email_alert(info: Dict[str, str]) -> str:
         f"⏱️ <b>Duration:</b> {info.get('duration', '30 Min.')}",
         "━━━━━━━━━━━━━━━━━━",
         "🎯 <b>Auto-Action Armed:</b>",
-        "• Bot alert milte hi ready ho gaya hai.",
-        "• Scheduled time par bot auto-login karega, <b>Gemini 3.5 AI se solve karega</b>, aur 80% safety timer ke sath submit karega!",
+        "• Bot alert milte hi scheduled tracking me add ho gaya hai.",
+        "• Scheduled time par bot auto-login karega, <b>Gemini AI se solve karega</b>, aur 80% safety timer ke sath submit karega!",
     ]
     return "\n".join(lines)
 
@@ -186,20 +237,8 @@ def check_gmail_for_meu_alerts() -> int:
                 subject = decode_str(msg.get("Subject", ""))
                 from_addr = decode_str(msg.get("From", ""))
 
-                # Extract text body
-                body_text = ""
-                if msg.is_multipart():
-                    for part in msg.walk():
-                        content_type = part.get_content_type()
-                        content_disp = str(part.get("Content-Disposition"))
-                        if content_type == "text/plain" and "attachment" not in content_disp:
-                            payload = part.get_payload(decode=True)
-                            if payload:
-                                body_text += payload.decode("utf-8", errors="replace")
-                else:
-                    payload = msg.get_payload(decode=True)
-                    if payload:
-                        body_text = payload.decode("utf-8", errors="replace")
+                # Extract text body using multi-format extractor (Plain + HTML)
+                body_text = extract_email_body(msg)
 
                 # Parse quiz schedule
                 parsed_data = parse_quiz_schedule_email(subject, body_text)
@@ -207,6 +246,29 @@ def check_gmail_for_meu_alerts() -> int:
                     logger.info(f"Detected MEU Quiz Email: '{parsed_data['test_name']}' for {parsed_data['course']}")
                     alert_msg = format_quiz_email_alert(parsed_data)
                     send_telegram_message(alert_msg, parse_mode="HTML")
+
+                    # Arm exact-time quiz sniper
+                    try:
+                        from src.sniper import quiz_sniper
+                        quiz_sniper.arm(parsed_data)
+                    except Exception as e_arm:
+                        logger.error(f"Failed to arm sniper for {parsed_data.get('test_name')}: {e_arm}")
+                    
+                    # Cache in state/scheduled_tests.json
+                    try:
+                        sched_path = os.path.join(BASE_DIR, "state", "scheduled_tests.json")
+                        sched_list = []
+                        if os.path.exists(sched_path):
+                            with open(sched_path, "r", encoding="utf-8") as sf:
+                                sched_list = json.load(sf)
+                        # Add if not duplicate
+                        if not any(st.get("test_name") == parsed_data["test_name"] and st.get("date") == parsed_data["date"] for st in sched_list):
+                            sched_list.append(parsed_data)
+                            with open(sched_path, "w", encoding="utf-8") as sf:
+                                json.dump(sched_list, sf, indent=2)
+                    except Exception as ex:
+                        logger.warning(f"Could not cache scheduled test: {ex}")
+
                     save_seen_email_id(eid_str)
                     new_alerts_count += 1
                 else:

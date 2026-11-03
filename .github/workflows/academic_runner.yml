@@ -2,8 +2,8 @@ name: Academic Auto Bot Ghost Cloud Runner
 
 on:
   schedule:
-    # Run every 30 minutes 24/7 on Microsoft GitHub Cloud
-    - cron: '*/30 * * * *'
+    # Run every 15 minutes 24/7 on Microsoft GitHub Cloud
+    - cron: '*/15 * * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [telegram_trigger, scan_solve, email_alert]

@@ -1,6 +1,6 @@
 @echo off
-title Stop Academic Auto-Bot
-echo Stopping all running instances of academic bot...
-wmic process where "commandline like '%%src.main%%'" delete 2>nul || taskkill /f /im python.exe /fi "WINDOWTITLE eq Academic & Quiz Auto-Bot Daemon*" 2>nul
-echo Bot stopped successfully.
+title Stop Academic Auto-Bot & Watchdog
+echo Stopping all running instances of academic bot and watchdog...
+powershell -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*src.main*' -or $_.CommandLine -like '*watchdog.py*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"
+echo Bot and watchdog stopped successfully.
 pause
