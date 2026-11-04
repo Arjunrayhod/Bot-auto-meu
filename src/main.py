@@ -218,6 +218,12 @@ def main():
     else:
         # Single execution run
         run_single_cycle()
+        # If running in cloud (GitHub Actions), check if an armed sniper is upcoming within 25 mins
+        try:
+            from src.sniper import quiz_sniper
+            quiz_sniper.check_cloud_standby(max_wait_seconds=1500)
+        except Exception as e:
+            logger.debug(f"Cloud sniper standby check: {e}")
 
 
 if __name__ == "__main__":

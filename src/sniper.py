@@ -317,6 +317,35 @@ class QuizSniper:
             target["status"] = f"error: {e}"
             self.save_state()
 
+    def check_cloud_standby(self, max_wait_seconds: int = 1500) -> bool:
+        """
+        For Cloud Runner (GitHub Actions):
+        If an armed test target time is within the next 25 minutes,
+        holds execution alive, waits until target time, and triggers _execute_sniper_run.
+        Returns True if a sniper was handled.
+        """
+        self.load_state()
+        now = datetime.now()
+        for target in self.armed_targets:
+            if target.get("status") != "armed":
+                continue
+            target_dt = datetime.fromisoformat(target["target_iso"])
+            time_until_start = (target_dt - now).total_seconds()
+
+            # If target time is between -60s (just started) and +max_wait_seconds (upcoming)
+            if -60 <= time_until_start <= max_wait_seconds:
+                logger.info(
+                    f"☁️ Cloud Runner Standby: Target '{target.get('test_name')}' starts in {int(time_until_start)}s "
+                    f"at {target_dt}. Holding standby position..."
+                )
+                if time_until_start > 0:
+                    time.sleep(time_until_start)
+                target["status"] = "triggered"
+                self.save_state()
+                self._execute_sniper_run(target)
+                return True
+        return False
+
 
 # Global sniper singleton
 quiz_sniper = QuizSniper()

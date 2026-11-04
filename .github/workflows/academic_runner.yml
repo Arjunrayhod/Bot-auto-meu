@@ -4,6 +4,15 @@ on:
   schedule:
     # Run every 15 minutes 24/7 on Microsoft GitHub Cloud
     - cron: '*/15 * * * *'
+    # Targeted Pre-Arm Crons for 05-Nov-2026 Quizzes:
+    # Quiz 5 (09:30 AM IST = 04:00 AM UTC): Trigger ahead at 09:10, 09:20, 09:30 AM IST
+    - cron: '40 3 * * *'
+    - cron: '50 3 * * *'
+    - cron: '0 4 * * *'
+    # QUIZ UNIT 4 (03:25 PM IST = 09:55 AM UTC): Trigger ahead at 03:05, 03:15, 03:25 PM IST
+    - cron: '35 9 * * *'
+    - cron: '45 9 * * *'
+    - cron: '55 9 * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [telegram_trigger, scan_solve, email_alert]
@@ -11,7 +20,9 @@ on:
 jobs:
   run-ghost-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
+    env:
+      TZ: 'Asia/Kolkata'
     permissions:
       contents: write
 
