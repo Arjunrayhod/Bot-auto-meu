@@ -223,7 +223,11 @@ def scan_dashboard_and_process_tasks(page: Page) -> int:
     Returns the count of newly processed tasks.
     """
     logger.info(f"Navigating to Dashboard: {DASHBOARD_URL}")
-    page.goto(DASHBOARD_URL, wait_until="networkidle", timeout=30000)
+    page.goto(DASHBOARD_URL, wait_until="domcontentloaded", timeout=45000)
+    try:
+        page.wait_for_load_state("networkidle", timeout=5000)
+    except Exception:
+        pass
 
     # 1. Discover tasks on main dashboard
     tasks = extract_tasks_from_page(page)

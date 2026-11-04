@@ -1,0 +1,18 @@
+[
+  {
+    "subject_raw": "04-11-26 03:56:20 - Test Schedule for :- 25BCC080T - Fundamentals of\r\n Storage",
+    "course": "25BCC080T - Fundamentals of",
+    "test_name": "QUIZ UNIT 4",
+    "date": "05-11-2026",
+    "time": "03:25 PM",
+    "duration": "70 Min."
+  },
+  {
+    "subject_raw": "04-11-26 07:59:41 - Test Schedule for :- 25BCC110P - Server\r\n Operating System - I",
+    "course": "25BCC110P - Server",
+    "test_name": "Quiz 5",
+    "date": "05-11-2026",
+    "time": "09:30 AM",
+    "duration": "30 Min."
+  }
+]

@@ -84,21 +84,32 @@ def send_telegram_message(text: str, parse_mode: Optional[str] = None) -> bool:
         if parse_mode:
             payload["parse_mode"] = parse_mode
 
-        try:
-            resp = requests.post(url, json=payload, timeout=15)
-            if not resp.ok:
-                # If markdown/HTML parsing failed, retry as plain text
-                if parse_mode:
-                    payload.pop("parse_mode", None)
-                    resp = requests.post(url, json=payload, timeout=15)
-
+        sent = False
+        for attempt in range(2):
+            try:
+                resp = requests.post(url, json=payload, timeout=25)
                 if not resp.ok:
-                    logger.error(f"Telegram API error ({resp.status_code}): {resp.text}")
-                    success_all = False
-            else:
-                logger.debug(f"Telegram chunk {idx}/{len(chunks)} sent successfully.")
-        except Exception as e:
-            logger.error(f"Network error sending Telegram message chunk: {e}")
+                    # If markdown/HTML parsing failed, retry as plain text
+                    if parse_mode:
+                        payload.pop("parse_mode", None)
+                        resp = requests.post(url, json=payload, timeout=25)
+
+                    if not resp.ok:
+                        logger.error(f"Telegram API error ({resp.status_code}): {resp.text}")
+                    else:
+                        sent = True
+                        break
+                else:
+                    logger.debug(f"Telegram chunk {idx}/{len(chunks)} sent successfully.")
+                    sent = True
+                    break
+            except Exception as e:
+                if attempt == 0:
+                    time.sleep(2.0)
+                    continue
+                logger.error(f"Network error sending Telegram message chunk: {e}")
+
+        if not sent:
             success_all = False
 
         if idx < len(chunks):

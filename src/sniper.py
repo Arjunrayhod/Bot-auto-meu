@@ -232,7 +232,11 @@ class QuizSniper:
                 browser, context, page = get_authenticated_session(p)
                 lms_url = "https://meu.gnums.co.in/StudentPanel/LMS/LMS_ContentStudentDashboard.aspx"
                 logger.info(f"Sniper navigating to LMS Dashboard: {lms_url}")
-                page.goto(lms_url, wait_until="networkidle", timeout=35000)
+                page.goto(lms_url, wait_until="domcontentloaded", timeout=45000)
+                try:
+                    page.wait_for_load_state("networkidle", timeout=5000)
+                except Exception:
+                    pass
 
                 # Look for the active test row in TEST LIST
                 rows = page.locator("table tr")
@@ -260,7 +264,7 @@ class QuizSniper:
                         task_page = context.new_page()
                         action_href = action_btn.get_attribute("href") or ""
                         if action_href and not action_href.startswith("javascript"):
-                            task_page.goto(urljoin(page.url, action_href), wait_until="networkidle", timeout=35000)
+                            task_page.goto(urljoin(page.url, action_href), wait_until="domcontentloaded", timeout=45000)
                         else:
                             action_btn.click()
                             page.wait_for_timeout(3000)
@@ -279,7 +283,7 @@ class QuizSniper:
                     logger.warning(f"Sniper could not find active 'Start Test' link on LMS for {test_name}. Will retry in 60s...")
                     # Wait 60s and try one more refresh in case professor opened it slightly late
                     page.wait_for_timeout(60000)
-                    page.reload(wait_until="networkidle")
+                    page.reload(wait_until="domcontentloaded")
                     # Check again
                     for i in range(rows.count()):
                         row = rows.nth(i)
@@ -290,7 +294,7 @@ class QuizSniper:
                             task_page = context.new_page()
                             action_href = action_btn.get_attribute("href") or ""
                             if action_href and not action_href.startswith("javascript"):
-                                task_page.goto(urljoin(page.url, action_href), wait_until="networkidle", timeout=35000)
+                                task_page.goto(urljoin(page.url, action_href), wait_until="domcontentloaded", timeout=45000)
                             else:
                                 action_btn.click()
                                 page.wait_for_timeout(3000)

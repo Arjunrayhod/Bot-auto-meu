@@ -66,54 +66,61 @@
     "BCA Regular Semester - 1 FOCSA - December 2025": [
       {
         "sr": "1",
-        "code": "25ALS060T",
-        "course": "Mathematics & Statistics",
-        "credit": "4.00",
-        "grade": "A"
+        "code": "25ALS110T",
+        "course": "Environmental Studies",
+        "credit": "2.00",
+        "grade": "B+"
       },
       {
         "sr": "2",
-        "code": "25BCC010T",
-        "course": "Computer Fundamental",
-        "credit": "4.00",
+        "code": "25BCC040P",
+        "course": "Database Concepts & RDBMS",
+        "credit": "2.00",
         "grade": "B"
       },
       {
         "sr": "3",
-        "code": "25BCC030P",
-        "course": "Cloud Computing Concepts-1",
-        "credit": "2.00",
-        "grade": "A"
+        "code": "25BCC040T",
+        "course": "Database Concepts & RDBMS",
+        "credit": "4.00",
+        "grade": "B+"
       },
       {
         "sr": "4",
-        "code": "25BCC030T",
-        "course": "Cloud Computing Concepts-1",
-        "credit": "4.00",
+        "code": "25BCC050P",
+        "course": "Cloud Computing Concepts-II",
+        "credit": "2.00",
         "grade": "B+"
       },
       {
         "sr": "5",
-        "code": "25BCC240P",
-        "course": "Programming in C",
-        "credit": "2.00",
-        "grade": "A"
-      },
-      {
-        "sr": "6",
-        "code": "25BCC240T",
-        "course": "Programming in C",
+        "code": "25BCC050T",
+        "course": "Cloud Computing Concepts-II",
         "credit": "4.00",
         "grade": "B+"
       },
       {
+        "sr": "6",
+        "code": "25BCC060P",
+        "course": "Linux Administration Lab",
+        "credit": "3.00",
+        "grade": "B+"
+      },
+      {
         "sr": "7",
-        "code": "25ECS030",
-        "course": "Basic English",
-        "credit": "2.00",
+        "code": "25BCC250P",
+        "course": "Data Structures Using C Lab",
+        "credit": "3.00",
         "grade": "B"
+      },
+      {
+        "sr": "8",
+        "code": "25ECS050",
+        "course": "Communicative English",
+        "credit": "2.00",
+        "grade": "A"
       }
     ]
   },
-  "updated_at": "2026-11-04 08:05:19"
+  "updated_at": "2026-11-04 21:37:37"
 }

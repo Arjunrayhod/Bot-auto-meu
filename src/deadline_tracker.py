@@ -39,7 +39,11 @@ def extract_assignments_deadlines(page: Page) -> List[Dict[str, Any]]:
     Scrapes the LMS dashboard and individual assignment links to build a deadline ledger.
     """
     logger.info(f"Navigating to LMS Dashboard: {LMS_DASHBOARD_URL}")
-    page.goto(LMS_DASHBOARD_URL, wait_until="networkidle", timeout=35000)
+    page.goto(LMS_DASHBOARD_URL, wait_until="domcontentloaded", timeout=45000)
+    try:
+        page.wait_for_load_state("networkidle", timeout=5000)
+    except Exception:
+        pass
 
     assignments = []
     today = date.today()
@@ -73,7 +77,7 @@ def extract_assignments_deadlines(page: Page) -> List[Dict[str, Any]]:
     for item in assignments[:8]:
         try:
             p = context.new_page()
-            p.goto(item["url"], wait_until="networkidle", timeout=25000)
+            p.goto(item["url"], wait_until="domcontentloaded", timeout=35000)
             b_text = p.inner_text("body")
 
             # Check submission status
@@ -124,7 +128,11 @@ def extract_lms_tests(page: Page) -> List[Dict[str, Any]]:
     tests = []
     try:
         if "LMS_ContentStudentDashboard.aspx" not in page.url:
-            page.goto(LMS_DASHBOARD_URL, wait_until="networkidle", timeout=35000)
+            page.goto(LMS_DASHBOARD_URL, wait_until="domcontentloaded", timeout=45000)
+            try:
+                page.wait_for_load_state("networkidle", timeout=5000)
+            except Exception:
+                pass
 
         rows = page.locator("table tr")
         row_count = rows.count()
@@ -160,9 +168,11 @@ def extract_lms_tests(page: Page) -> List[Dict[str, Any]]:
                     action_btn = row.locator("a, button, input[type='submit']")
                     action_text = ""
                     action_href = ""
+                    is_active_now = False
                     if action_btn.count() > 0:
                         action_text = action_btn.first.inner_text().strip()
-                        is_active_now = action_btn.count() > 0 and (any(w in action_text.lower() for w in ["start", "attempt", "click here"]) or "start" in action_href.lower()) and "not attempted" not in action_text.lower() and "over" not in r_text.lower()
+                        action_href = action_btn.first.get_attribute("href") or ""
+                        is_active_now = (any(w in action_text.lower() for w in ["start", "attempt", "click here"]) or "start" in action_href.lower()) and "not attempted" not in action_text.lower() and "over" not in r_text.lower()
                     is_submitted = "submitted" in r_text.lower()
                     is_over = "duration is over" in r_text.lower() or "over" in r_text.lower()
 

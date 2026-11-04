@@ -6,6 +6,30 @@
       "status": "completed",
       "timestamp": "2026-11-02 20:00:09",
       "metadata": {}
+    },
+    "56befcf6903e": {
+      "title": "Apply for Supplementary Exam of Theory Subject in BCA Semester - 5 Supplementary Exam",
+      "status": "completed",
+      "timestamp": "2026-11-04 21:27:41",
+      "metadata": {}
+    },
+    "b371e1bbe081": {
+      "title": "Apply for Supplementary Exam of Practical Subject in BCA Semester - 5 Supplementary Exam",
+      "status": "completed",
+      "timestamp": "2026-11-04 21:27:44",
+      "metadata": {}
+    },
+    "4a4dd65c080d": {
+      "title": "Apply for Supplementary Exam of Theory Subject in BCA Semester - 3 Supplementary Exam",
+      "status": "completed",
+      "timestamp": "2026-11-04 21:27:47",
+      "metadata": {}
+    },
+    "355b3bc70cbc": {
+      "title": "Apply for Supplementary Exam of Practical Subject in BCA Semester - 3 Supplementary Exam",
+      "status": "completed",
+      "timestamp": "2026-11-04 21:27:50",
+      "metadata": {}
     }
   },
   "practicals": {},
@@ -146,6 +170,12 @@
       "title": "Assignment",
       "status": "discovered",
       "timestamp": "2026-11-03 21:09:27",
+      "metadata": {}
+    },
+    "22eebc922f95": {
+      "title": "Assignment 5",
+      "status": "completed",
+      "timestamp": "2026-11-04 21:27:37",
       "metadata": {}
     }
   }

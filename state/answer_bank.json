@@ -26,6 +26,15 @@
         "reasoning": "A queue operates on a First-In, First-Out (FIFO) basis where the first element added is the first one to be removed.",
         "source": "llm_gemini"
       }
+    },
+    "99fa8c1cd72cdf31bd538621eaca4f8b": {
+      "question": "What is RAID 0?",
+      "result": {
+        "selected_index": 0,
+        "selected_option": "Striping without parity",
+        "reasoning": "RAID 0 implements data striping across multiple disks to improve performance without providing any fault tolerance or parity.",
+        "source": "llm_gemini"
+      }
     }
   }
 }
