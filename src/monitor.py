@@ -368,6 +368,37 @@ def scan_dashboard_and_process_tasks(page: Page) -> int:
                             task_page.close()
                         except Exception:
                             pass
+            else:
+                # Check if this row is an upcoming test to arm the Quiz Sniper ahead of time
+                if not any(k in r_text.lower() for k in ['submitted', 'result will be display', 'not attempted', 'duration is over']):
+                    try:
+                        cols = [c.inner_text().strip() for c in row.locator('td').all()]
+                        if len(cols) >= 5:
+                            date_col = cols[1]
+                            m_date = re.search(r'(\d{1,2}-\d{1,2}-\d{4})', date_col)
+                            test_date = m_date.group(1) if m_date else ''
+
+                            time_col = cols[2]
+                            m_time = re.search(r'(\d{1,2}:\d{2}\s*(?:AM|PM))', time_col, re.IGNORECASE)
+                            start_time = m_time.group(1).upper() if m_time else ''
+
+                            m_dur = re.search(r'(\d+)\s*Min\.', time_col, re.IGNORECASE)
+                            duration_str = f'{m_dur.group(1)} Min.' if m_dur else '30 Min.'
+
+                            subj_name = cols[3] if len(cols) > 3 else 'Academic Subject'
+                            t_name = cols[4] if len(cols) > 4 else 'Online Quiz'
+
+                            if test_date and start_time:
+                                from src.sniper import quiz_sniper
+                                quiz_sniper.arm({
+                                    'course': subj_name,
+                                    'test_name': t_name,
+                                    'date': test_date,
+                                    'time': start_time,
+                                    'duration': duration_str,
+                                })
+                    except Exception as arm_err:
+                        logger.debug(f'Could not auto-arm upcoming test from LMS row: {arm_err}')
     except Exception as e:
         logger.error(f"Error checking LMS TEST LIST for active quizzes: {e}")
 

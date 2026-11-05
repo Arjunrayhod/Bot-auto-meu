@@ -123,6 +123,21 @@ def ensure_single_bot():
             pass
 
 
+def prevent_windows_sleep():
+    """Instructs Windows power management to keep CPU running."""
+    try:
+        import ctypes
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        ES_AWAYMODE_REQUIRED = 0x00000040
+        ctypes.windll.kernel32.SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED
+        )
+        logger.info("Windows system sleep prevention active (ES_CONTINUOUS | ES_SYSTEM_REQUIRED).")
+    except Exception as e:
+        logger.debug(f"Could not set thread execution state: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Autonomous Academic Assistant Bot")
     parser.add_argument(
@@ -195,6 +210,7 @@ def main():
     # If --daemon flag is provided or default continuous mode
     if args.daemon:
         ensure_single_bot()
+        prevent_windows_sleep()
         logger.info(f"Bot launched in continuous daemon mode. Polling interval: {args.interval}s")
         # Start background interactive button listener
         interactive_listener.start()
