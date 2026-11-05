@@ -61,7 +61,12 @@ class TaskLedger:
 
     def is_seen(self, task_type: str, task_id: str) -> bool:
         category = self.data.get(task_type, {})
-        return task_id in category
+        entry = category.get(task_id)
+        if not entry:
+            return False
+        if isinstance(entry, dict) and entry.get("status") in ("failed", "error"):
+            return False
+        return True
 
     def mark_seen(self, task_type: str, task_id: str, title: str, status: str = "processed", metadata: Optional[dict] = None):
         if task_type not in self.data:
@@ -335,23 +340,34 @@ def scan_dashboard_and_process_tasks(page: Page) -> int:
 
                     action_btn = action_btns.first
                     context = page.context
-                    task_page = context.new_page()
                     action_href = action_btn.get_attribute("href") or ""
+                    
                     if action_href and not action_href.startswith("javascript"):
-                        task_page.goto(urljoin(page.url, action_href), wait_until="networkidle", timeout=35000)
+                        task_page = context.new_page()
+                        task_page.goto(urljoin(page.url, action_href), wait_until="domcontentloaded", timeout=35000)
                     else:
+                        initial_pages = set(context.pages)
                         action_btn.click()
-                        page.wait_for_timeout(3000)
-                        task_page = page
+                        page.wait_for_timeout(4000)
+                        new_pages = [p for p in context.pages if p not in initial_pages and p.url != "about:blank"]
+                        if new_pages:
+                            task_page = new_pages[-1]
+                            logger.info(f"Quiz opened in new tab/popup: {task_page.url}")
+                        else:
+                            task_page = page
+                            logger.info(f"Quiz opened in same page: {task_page.url}")
 
                     success = process_quiz(task_page, task_id, test_name, subject=subject)
                     if success:
                         ledger.mark_seen("quizzes", task_id, test_name, status="completed")
                     else:
-                        ledger.mark_seen("quizzes", task_id, test_name, status="failed")
+                        logger.warning(f"Quiz '{test_name}' not yet completed; leaving unrecorded in ledger for retry.")
 
                     if task_page != page:
-                        task_page.close()
+                        try:
+                            task_page.close()
+                        except Exception:
+                            pass
     except Exception as e:
         logger.error(f"Error checking LMS TEST LIST for active quizzes: {e}")
 

@@ -261,14 +261,16 @@ class QuizSniper:
                         action_btn = action_btns.first
                         task_id = _generate_task_id(test_name, "quizzes", subject)
 
-                        task_page = context.new_page()
                         action_href = action_btn.get_attribute("href") or ""
                         if action_href and not action_href.startswith("javascript"):
+                            task_page = context.new_page()
                             task_page.goto(urljoin(page.url, action_href), wait_until="domcontentloaded", timeout=45000)
                         else:
+                            initial_pages = set(context.pages)
                             action_btn.click()
-                            page.wait_for_timeout(3000)
-                            task_page = page
+                            page.wait_for_timeout(4000)
+                            new_pages = [p for p in context.pages if p not in initial_pages and p.url != "about:blank"]
+                            task_page = new_pages[-1] if new_pages else page
 
                         success = process_quiz(task_page, task_id, test_name, subject=subject)
                         if success:

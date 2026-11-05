@@ -268,10 +268,88 @@ def process_quiz(page: Page, task_id: str, title: str, subject: Optional[str] = 
     except Exception as e:
         logger.warning(f"Failed to send quiz started alert: {e}")
 
-    # 2. Extract questions
+    # Check if quiz opened in another tab/popup
+    try:
+        for p in page.context.pages:
+            if p != page and p.url and "about:blank" not in p.url and "Dashboard" not in p.url:
+                logger.info(f"Switching to active quiz popup/tab: {p.url}")
+                page = p
+                page.on("dialog", lambda dialog: dialog.accept())
+                break
+    except Exception as e:
+        logger.debug(f"Error checking pages: {e}")
+
+    logger.info(f"Active quiz page URL: {page.url} | Title: {page.title()}")
+
+    # 2. Extract questions (with instruction screen and frame fallback)
     questions = extract_questions_from_page(page)
     if not questions:
-        logger.error(f"Could not parse any questions on page for quiz '{title}'.")
+        logger.info("Questions not found on initial view. Checking for instruction agreement or start buttons...")
+        # Check agreement checkbox
+        try:
+            checkboxes = page.locator("input[type='checkbox']")
+            for cb_i in range(checkboxes.count()):
+                cb = checkboxes.nth(cb_i)
+                if not cb.is_checked():
+                    cb.check(force=True)
+                    logger.info("Checked exam instruction checkbox.")
+        except Exception as e:
+            logger.debug(f"Checkbox check error: {e}")
+
+        # Click Start / Proceed / Agree / Confirm / Take Test button
+        start_btns = page.locator(
+            "input[id*='btnAgree'], button:has-text('Agree'), a:has-text('Agree'), "
+            "input[id*='btnConfirm'], button:has-text('Confirm'), a:has-text('Confirm'), input[value*='Confirm'], "
+            "input[type='submit'][value*='Start'], button:has-text('Start'), a:has-text('Start'), "
+            "input[value*='Proceed'], button:has-text('Proceed'), a:has-text('Proceed'), "
+            "input[value*='Continue'], button:has-text('Continue'), "
+            "input[id*='btnStart'], input[id*='btnTakeTest'], a[id*='btnStart']"
+        )
+        if start_btns.count() > 0:
+            for b_i in range(start_btns.count()):
+                b = start_btns.nth(b_i)
+                try:
+                    if b.is_visible():
+                        b_txt = b.inner_text().strip() or b.get_attribute("value") or "Start"
+                        logger.info(f"Clicking exam start button: '{b_txt}'")
+                        b.click()
+                        page.wait_for_timeout(5000)
+                        # Check if a new tab/popup opened after clicking start/agree
+                        try:
+                            for p in page.context.pages:
+                                if p != page and p.url and "about:blank" not in p.url and "Dashboard" not in p.url:
+                                    logger.info(f"Switched to active quiz popup/tab after start: {p.url}")
+                                    page = p
+                                    page.on("dialog", lambda dialog: dialog.accept())
+                                    break
+                        except Exception as e:
+                            logger.debug(f"Error switching page after start: {e}")
+                        break
+                except Exception as e:
+                    logger.debug(f"Start button click: {e}")
+
+        try:
+            page.wait_for_selector("input[type='radio'], div.card, tr:has(input[type='radio'])", timeout=10000)
+        except Exception:
+            pass
+
+        questions = extract_questions_from_page(page)
+
+    # Frame fallback
+    if not questions and hasattr(page, "frames"):
+        for fr in page.frames:
+            if fr != page.main_frame:
+                try:
+                    f_qs = extract_questions_from_page(fr)
+                    if f_qs:
+                        logger.info(f"Extracted {len(f_qs)} questions from iframe: {fr.url}")
+                        questions = f_qs
+                        break
+                except Exception:
+                    pass
+
+    if not questions:
+        logger.error(f"Could not parse any questions on page for quiz '{title}'. URL: {page.url}")
         return False
 
     logger.info(f"Successfully extracted {len(questions)} questions. Beginning answering loop...")
@@ -358,6 +436,31 @@ def process_quiz(page: Page, task_id: str, title: str, subject: Optional[str] = 
                 page.wait_for_timeout(3000)
                 submitted = True
                 break
+
+    # Handle post-submit confirmation popup / modal ("OK" / "Yes" button)
+    page.wait_for_timeout(1500)
+    ok_selectors = [
+        "button.confirm",
+        ".swal-button--confirm",
+        "button:has-text('OK')",
+        "button:has-text('Ok')",
+        "button:has-text('Yes')",
+        "a:has-text('OK')",
+        "a:has-text('Ok')",
+        "input[value='OK']",
+        "input[value='Ok']",
+        "input[value='Yes']",
+    ]
+    for ok_sel in ok_selectors:
+        ok_btn = page.locator(ok_sel)
+        if ok_btn.count() > 0 and ok_btn.first.is_visible():
+            try:
+                logger.info(f"Clicking final confirmation button: '{ok_sel}'")
+                ok_btn.first.click()
+                page.wait_for_timeout(3000)
+                break
+            except Exception as e:
+                logger.debug(f"OK button click note: {e}")
 
     if not submitted:
         logger.error("Could not find or click Submit button for quiz.")
