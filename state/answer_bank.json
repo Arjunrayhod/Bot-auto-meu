@@ -35,6 +35,15 @@
         "reasoning": "RAID 0 implements data striping across multiple disks to improve performance without providing any fault tolerance or parity.",
         "source": "llm_gemini"
       }
+    },
+    "4cec8f323be4b674bff1d58df9f718df": {
+      "question": "Which of the following is a non-volatile memory?",
+      "result": {
+        "selected_index": 1,
+        "selected_option": "ROM",
+        "reasoning": "ROM (Read-Only Memory) is non-volatile, meaning it retains data even when power is removed, unlike RAM, Cache, and Registers which are volatile.",
+        "source": "llm_gemini"
+      }
     }
   }
 }

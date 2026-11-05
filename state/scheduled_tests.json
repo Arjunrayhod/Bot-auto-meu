@@ -14,5 +14,13 @@
     "date": "05-11-2026",
     "time": "09:30 AM",
     "duration": "30 Min."
+  },
+  {
+    "subject_raw": "05-11-26 09:30:02 - Test Schedule for :- 25BCC100T - Cloud Computing\r\n Applications - I",
+    "course": "25BCC100T - Cloud Computing",
+    "test_name": "Quiz 4",
+    "date": "05-11-2026",
+    "time": "11:00 AM",
+    "duration": "20 Min."
   }
 ]

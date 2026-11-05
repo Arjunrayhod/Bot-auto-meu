@@ -7,7 +7,7 @@
     "time": "03:25 PM",
     "duration": "70 Min.",
     "target_iso": "2026-11-05T15:25:00",
-    "status": "armed",
+    "status": "expired",
     "armed_at": "2026-11-04 21:09:16"
   },
   {
@@ -18,7 +18,18 @@
     "time": "09:30 AM",
     "duration": "30 Min.",
     "target_iso": "2026-11-05T09:30:00",
-    "status": "armed",
+    "status": "triggered",
     "armed_at": "2026-11-04 21:09:48"
+  },
+  {
+    "key": "Quiz 4:25BCC100T - Cloud Computing:2026-11-05 11:00",
+    "course": "25BCC100T - Cloud Computing",
+    "test_name": "Quiz 4",
+    "date": "05-11-2026",
+    "time": "11:00 AM",
+    "duration": "20 Min.",
+    "target_iso": "2026-11-05T11:00:00",
+    "status": "expired",
+    "armed_at": "2026-11-05 09:32:22"
   }
 ]
