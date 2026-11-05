@@ -108,6 +108,21 @@ def run_single_cycle() -> int:
     return new_tasks
 
 
+def ensure_single_bot():
+    """Kills any older running daemon bot instance to avoid duplicate listeners."""
+    import psutil
+    me = os.getpid()
+    for p in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if p.info['pid'] != me:
+                cmdline = p.info.get('cmdline') or []
+                if 'src.main' in cmdline and '--daemon' in cmdline and not any(arg == '-c' for arg in cmdline):
+                    logger.warning(f"Terminating older duplicate bot instance (PID {p.info['pid']})...")
+                    p.kill()
+        except Exception:
+            pass
+
+
 def main():
     parser = argparse.ArgumentParser(description="Autonomous Academic Assistant Bot")
     parser.add_argument(
@@ -176,20 +191,6 @@ def main():
             browser.close()
         logger.info("Login test finished.")
         return
-
-def ensure_single_bot():
-    """Kills any older running daemon bot instance to avoid duplicate listeners."""
-    import psutil
-    me = os.getpid()
-    for p in psutil.process_iter(['pid', 'name', 'cmdline']):
-        try:
-            if p.info['pid'] != me:
-                cmdline = p.info.get('cmdline') or []
-                if 'src.main' in cmdline and '--daemon' in cmdline and not any(arg == '-c' for arg in cmdline):
-                    logger.warning(f"Terminating older duplicate bot instance (PID {p.info['pid']})...")
-                    p.kill()
-        except Exception:
-            pass
 
     # If --daemon flag is provided or default continuous mode
     if args.daemon:
