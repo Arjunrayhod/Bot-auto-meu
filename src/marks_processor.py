@@ -193,3 +193,90 @@ def format_marks_report(data: Dict[str, Any]) -> str:
     lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append(f"🕒 <i>Last synced: {data.get('updated_at', 'Just now')}</i>")
     return "\n".join(lines)
+
+
+def format_declared_results_report(tests: Optional[List[Dict[str, Any]]] = None) -> str:
+    """
+    Formats all declared online quiz and test marks/scores with release dates into an HTML report.
+    """
+    if tests is None:
+        try:
+            from src.deadline_tracker import get_cached_tests
+            tests = get_cached_tests() or []
+        except Exception:
+            tests = []
+    lines = [
+        "🏆 <b>DECLARED QUIZ & TEST RESULTS (SCORES)</b>",
+        "━━━━━━━━━━━━━━━━━━",
+        "Portal par jin-jin quizzes aur tests ke numbers declare ho chuke hain:",
+        "",
+    ]
+
+    passed_tests = []
+    other_tests = []
+    pending_tests = []
+
+    for t in tests:
+        marks = t.get("marks", "-").strip()
+        result = t.get("result", "").strip()
+        name = t.get("test_name", "Quiz")
+        subj = t.get("subject", "Academic Course")
+        date = t.get("test_date", "N/A")
+
+        if "will be display" in result.lower() or marks == "-":
+            pending_tests.append((name, subj, result, date))
+        elif marks != "-":
+            if "pass" in result.lower():
+                passed_tests.append((name, subj, marks, result, date))
+            else:
+                other_tests.append((name, subj, marks, result or "Evaluated", date))
+
+    # 1. Passed & High-Scoring Quizzes
+    if passed_tests:
+        lines.append("🟢 <b>PASSED QUIZZES & SCORES:</b>")
+        for name, subj, marks, res, date in passed_tests:
+            star = " ⭐ <b>(Full Marks!)</b>" if ("15.00 / 15" in marks or "20.00 / 20" in marks) else ""
+            lines.append(f"• <b>{name}</b> — <i>{subj}</i>")
+            lines.append(f"   ├ 📊 <b>Score:</b> <code>{marks}</code>{star}")
+            lines.append(f"   ├ 🟢 <b>Result:</b> <b>{res}</b>")
+            lines.append(f"   └ 📅 <b>Date:</b> {date}")
+            lines.append("")
+    else:
+        lines.append("ℹ️ <i>Koi passed quiz record abhi nahi mila.</i>")
+        lines.append("")
+
+    lines.append("━━━━━━━━━━━━━━━━━━")
+
+    # 2. Other evaluated / Not attempted
+    if other_tests:
+        lines.append("📋 <b>OTHER EVALUATIONS:</b>")
+        for name, subj, marks, res, date in other_tests:
+            icon = "🔴" if "fail" in res.lower() else "⚪"
+            lines.append(f"• <b>{name}</b> — <i>{subj}</i>")
+            lines.append(f"   ├ 📊 <b>Score:</b> <code>{marks}</code>")
+            lines.append(f"   ├ {icon} <b>Status:</b> {res}")
+            lines.append(f"   └ 📅 <b>Date:</b> {date}")
+            lines.append("")
+        lines.append("━━━━━━━━━━━━━━━━━━")
+
+    # 3. Results releasing soon
+    if pending_tests:
+        lines.append("⏳ <b>RESULTS RELEASING SOON:</b>")
+        seen_pending = set()
+        for name, subj, res_text, date in pending_tests:
+            key = (name, subj)
+            if key not in seen_pending:
+                seen_pending.add(key)
+                lines.append(f"• <b>{name}</b> (<i>{subj}</i>)")
+                lines.append(f"   └ 🕒 <i>{res_text}</i>")
+                lines.append("")
+        lines.append("━━━━━━━━━━━━━━━━━━")
+
+    # 4. Note on Assignments
+    lines.append("📚 <b>Assignments Evaluation:</b>")
+    lines.append("• Sabhi assignments ke solutions chat me send ho chuke hain.")
+    lines.append("• Portal par internal faculty grading update hote hi yahan number show ho jayenge.")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("💡 <i>Tip: Jaise hi portal par naya result update hota hai, bot automatic yahan reflect kar deta hai!</i>")
+
+    return chr(10).join(lines)

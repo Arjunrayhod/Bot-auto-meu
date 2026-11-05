@@ -27,19 +27,22 @@ def get_main_menu_markup() -> Dict[str, Any]:
     return {
         "inline_keyboard": [
             [
+                {"text": "🏆 Declared Results (Marks)", "callback_data": "btn_declared_results"},
                 {"text": "⚡ Scan & Solve Work", "callback_data": "btn_scan_solve"},
-                {"text": "📊 Check Attendance", "callback_data": "btn_attendance"},
             ],
             [
                 {"text": "📝 Online Quizzes / Tests", "callback_data": "btn_tests"},
+                {"text": "📊 Check Attendance", "callback_data": "btn_attendance"},
+            ],
+            [
                 {"text": "⏳ Pending Deadlines", "callback_data": "btn_deadlines"},
+                {"text": "🎯 MST & Exam Marks", "callback_data": "btn_marks"},
             ],
             [
-                {"text": "🎯 Test & MST Marks", "callback_data": "btn_marks"},
-                {"text": "⚠️ Low Attendance Alert", "callback_data": "btn_low_attendance"},
-            ],
-            [
+                {"text": "⚠️ Low Attendance", "callback_data": "btn_low_attendance"},
                 {"text": "🔄 Sync Portal Now", "callback_data": "btn_sync"},
+            ],
+            [
                 {"text": "🤖 Bot Status", "callback_data": "btn_status"},
             ],
         ]
@@ -50,9 +53,10 @@ def get_reply_keyboard_markup() -> Dict[str, Any]:
     """Generates a persistent quick-access keyboard above the chat input."""
     return {
         "keyboard": [
-            [{"text": "⚡ Scan & Solve Work"}, {"text": "📝 Online Quizzes / Tests"}],
-            [{"text": "📊 Check Attendance"}, {"text": "⏳ Deadlines"}],
-            [{"text": "🎯 Test & MST Marks"}, {"text": "📋 Main Menu"}],
+            [{"text": "🏆 Declared Results (Marks)"}, {"text": "⚡ Scan & Solve Work"}],
+            [{"text": "📝 Online Quizzes / Tests"}, {"text": "📊 Check Attendance"}],
+            [{"text": "⏳ Deadlines"}, {"text": "🎯 MST & Exam Marks"}],
+            [{"text": "📋 Main Menu"}],
         ],
         "resize_keyboard": True,
         "is_persistent": True,
@@ -66,6 +70,7 @@ def send_menu(chat_id: str, text: Optional[str] = None):
         "━━━━━━━━━━━━━━━━━━\n"
         "Welcome! Kisi bhi option ke liye neeche button dabayein ya chat me keyword likhein:\n\n"
         "💬 <b>Chat Commands / Keywords:</b>\n"
+        "• <code>/results</code> ya <code>number</code> ➔ 🏆 Declared Quiz &amp; Test Marks (Scores)\n"
         "• <code>/tests</code> ya <code>quiz</code> ➔ Live Quizzes/Tests (Date, Time, Duration &amp; Status)\n"
         "• <code>/scan</code> ya <code>solve</code> ➔ Naye assignments/quizzes scan &amp; auto-solve\n"
         "• <code>/deadlines</code> ya <code>assignment</code> ➔ Assignment dates &amp; timer\n"
@@ -244,6 +249,39 @@ def handle_tests_request(chat_id: str, force_refresh: bool = False):
     requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload, timeout=15)
 
 
+def handle_declared_results_request(chat_id: str, force_refresh: bool = False):
+    """Replies with all declared quiz marks, scores, and release status."""
+    from src.deadline_tracker import get_cached_tests, extract_lms_tests
+    from src.marks_processor import format_declared_results_report
+
+    cached = get_cached_tests()
+    if not cached or force_refresh:
+        requests.post(
+            f"{TELEGRAM_API_URL}/sendMessage",
+            json={"chat_id": chat_id, "text": "⏳ <i>Checking portal for declared quiz & test results...</i>", "parse_mode": "HTML"},
+            timeout=10,
+        )
+        try:
+            from playwright.sync_api import sync_playwright
+            from src.auth import get_authenticated_session
+            with sync_playwright() as p:
+                b, ctx, page = get_authenticated_session(p)
+                cached = extract_lms_tests(page)
+                ctx.close()
+                b.close()
+        except Exception as e:
+            logger.error(f"Error fetching declared results: {e}")
+
+    report = format_declared_results_report(cached or [])
+    payload = {
+        "chat_id": chat_id,
+        "text": report,
+        "parse_mode": "HTML",
+        "reply_markup": get_main_menu_markup(),
+    }
+    requests.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload, timeout=15)
+
+
 def handle_exams_request(chat_id: str):
     """Replies with Mid Exam / CIA assessment schedule."""
     msg = (
@@ -405,16 +443,25 @@ def dispatch_action(action: str, chat_id: str):
     """Routes an action identifier or command to the appropriate handler."""
     act = action.strip().lower()
 
+    # Declared Results & Quiz Marks
+    if act in (
+        "btn_declared_results", "🏆 declared results (marks)", "declared results", "declared marks",
+        "/results", "/result", "/scores", "/score", "result", "results", "score", "scores",
+        "number", "numbers", "marks", "quiz result", "quize result", "quiz marks", "quize marks",
+        "kitne number aaye", "test result", "result aa gaya kya"
+    ):
+        handle_declared_results_request(chat_id)
+
     # Scan & Solve Pending Work
-    if act in ("btn_scan_solve", "⚡ scan & solve work", "/scan", "scan", "solve", "solve assignments", "scan now", "check work", "kuch naya aaya kya"):
+    elif act in ("btn_scan_solve", "⚡ scan & solve work", "/scan", "scan", "solve", "solve assignments", "scan now", "check work", "kuch naya aaya kya"):
         handle_scan_and_solve_request(chat_id)
 
     # Online Quizzes & Tests Schedule
     elif act in ("btn_tests", "📝 online quizzes / tests", "online quizzes / tests", "/tests", "/test", "/quiz", "/quizzes", "test", "tests", "quiz", "quizzes", "exam", "exams", "quiz timing", "test timing", "quiz kab hai"):
         handle_tests_request(chat_id)
 
-    # Marks & MST
-    elif act in ("btn_marks", "🎯 test & mst marks", "/marks", "marks", "mst", "test marks", "mst marks", "result", "results", "grade", "grades", "/result", "/mst"):
+    # MST & Semester Grades
+    elif act in ("btn_marks", "🎯 mst & exam marks", "🎯 test & mst marks", "/mst", "mst", "grade", "grades", "/grades", "semester result"):
         handle_marks_request(chat_id)
 
     # Attendance
