@@ -8,15 +8,14 @@ startup_dir = os.path.join(
     "Programs",
     "Startup",
 )
-target_vbs = os.path.join(r"C:\Users\galaxy\OneDrive\Desktop\meu", "run_silent_background.vbs")
 startup_file = os.path.join(startup_dir, "AcademicAutoBot.vbs")
 
-vbs_content = f'''Set WshShell = CreateObject("WScript.Shell")
-WshShell.CurrentDirectory = "{os.path.dirname(target_vbs)}"
-WshShell.Run "python -m src.main --daemon --interval 600", 0, False
+vbs_content = '''Set WshShell = CreateObject("WScript.Shell")
+WshShell.CurrentDirectory = "C:\\Users\\galaxy\\OneDrive\\Desktop\\meu"
+WshShell.Run """C:\\Users\\galaxy\\AppData\\Local\\Programs\\Python\\Python314\\python.exe"" ""C:\\Users\\galaxy\\OneDrive\\Desktop\\meu\\watchdog.py""", 0, False
 '''
 
 with open(startup_file, "w", encoding="utf-8") as f:
     f.write(vbs_content)
 
-print(f"Startup entry created successfully at: {startup_file}")
+print(f"Updated: {startup_file}")

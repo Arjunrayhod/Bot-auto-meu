@@ -3,7 +3,7 @@ Set WshShell = CreateObject("WScript.Shell")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 
 strDir = FSO.GetParentFolderName(WScript.ScriptFullName)
-strCmd = """C:\Users\galaxy\AppData\Local\Programs\Python\Python314\pythonw.exe"" """ & strDir & "\watchdog.py"""
+strCmd = """C:\Users\galaxy\AppData\Local\Programs\Python\Python314\python.exe"" """ & strDir & "\watchdog.py"""
 
 WshShell.CurrentDirectory = strDir
 ' Run command with window style 0 (completely hidden) and bWaitOnReturn = False
