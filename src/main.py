@@ -184,8 +184,8 @@ def ensure_single_bot():
     for p in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             if p.info['pid'] != me:
-                cmd = ' '.join(p.info.get('cmdline') or [])
-                if 'src.main' in cmd and '--daemon' in cmd:
+                cmdline = p.info.get('cmdline') or []
+                if 'src.main' in cmdline and '--daemon' in cmdline and not any(arg == '-c' for arg in cmdline):
                     logger.warning(f"Terminating older duplicate bot instance (PID {p.info['pid']})...")
                     p.kill()
         except Exception:

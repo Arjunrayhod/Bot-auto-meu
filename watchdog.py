@@ -79,8 +79,8 @@ def ensure_single_watchdog():
     for p in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             if p.info['pid'] != me:
-                cmd = ' '.join(p.info.get('cmdline') or [])
-                if 'watchdog.py' in cmd:
+                cmdline = p.info.get('cmdline') or []
+                if any(arg.endswith('watchdog.py') for arg in cmdline) and not any(arg == '-c' for arg in cmdline):
                     logger.warning(f"Terminating older duplicate watchdog instance (PID {p.info['pid']})...")
                     p.kill()
         except Exception:
