@@ -72,8 +72,23 @@ try:
 except Exception:
     pass
 
+def ensure_single_watchdog():
+    """Kills any older running watchdog instance to avoid duplicate listeners."""
+    import psutil
+    me = os.getpid()
+    for p in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if p.info['pid'] != me:
+                cmd = ' '.join(p.info.get('cmdline') or [])
+                if 'watchdog.py' in cmd:
+                    logger.warning(f"Terminating older duplicate watchdog instance (PID {p.info['pid']})...")
+                    p.kill()
+        except Exception:
+            pass
+
 def run_watchdog():
     global current_process, RUNNING
+    ensure_single_watchdog()
     prevent_windows_sleep()
     logger.info("==================================================")
     logger.info("   24/7 SELF-HEALING BOT WATCHDOG ACTIVATED")

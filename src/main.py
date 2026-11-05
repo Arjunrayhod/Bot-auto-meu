@@ -177,8 +177,23 @@ def main():
         logger.info("Login test finished.")
         return
 
+def ensure_single_bot():
+    """Kills any older running daemon bot instance to avoid duplicate listeners."""
+    import psutil
+    me = os.getpid()
+    for p in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if p.info['pid'] != me:
+                cmd = ' '.join(p.info.get('cmdline') or [])
+                if 'src.main' in cmd and '--daemon' in cmd:
+                    logger.warning(f"Terminating older duplicate bot instance (PID {p.info['pid']})...")
+                    p.kill()
+        except Exception:
+            pass
+
     # If --daemon flag is provided or default continuous mode
     if args.daemon:
+        ensure_single_bot()
         logger.info(f"Bot launched in continuous daemon mode. Polling interval: {args.interval}s")
         # Start background interactive button listener
         interactive_listener.start()

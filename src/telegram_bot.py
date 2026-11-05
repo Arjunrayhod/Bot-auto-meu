@@ -463,6 +463,24 @@ def dispatch_action(action: str, chat_id: str):
         ))
 
 
+_recent_actions = {}
+_action_lock = threading.Lock()
+
+def is_duplicate_action(chat_id: str, action: str, window_sec: float = 3.0) -> bool:
+    """Returns True if this exact action was triggered from chat_id within window_sec to prevent double-clicks."""
+    now = time.time()
+    key = (chat_id, action)
+    with _action_lock:
+        last_time = _recent_actions.get(key, 0.0)
+        if (now - last_time) < window_sec:
+            return True
+        _recent_actions[key] = now
+        # Periodic cleanup of keys older than 60s
+        for k in list(_recent_actions.keys()):
+            if (now - _recent_actions[k]) > 60:
+                del _recent_actions[k]
+    return False
+
 class TelegramInteractiveListener:
     """
     Background worker that listens for user button clicks and commands via getUpdates.
@@ -514,8 +532,12 @@ class TelegramInteractiveListener:
                             chat_obj = msg_obj.get("chat") or {}
                             from_chat = str(chat_obj.get("id") or cb.get("from", {}).get("id") or CHAT_ID)
 
-                            logger.info(f"Telegram Action Triggered: '{cb_data}' by chat: {from_chat}")
                             answer_callback_query(cb_id)
+                            if is_duplicate_action(from_chat, cb_data, window_sec=3.0):
+                                logger.info(f"Ignored duplicate click for action '{cb_data}' from {from_chat}")
+                                continue
+
+                            logger.info(f"Telegram Action Triggered: '{cb_data}' by chat: {from_chat}")
                             threading.Thread(
                                 target=dispatch_action, args=(cb_data, from_chat), daemon=True
                             ).start()
@@ -525,6 +547,10 @@ class TelegramInteractiveListener:
                             msg = update["message"]
                             text = msg["text"].strip().lower()
                             from_chat = str(msg.get("chat", {}).get("id") or CHAT_ID)
+
+                            if is_duplicate_action(from_chat, text, window_sec=1.5):
+                                logger.info(f"Ignored duplicate text command '{text}' from {from_chat}")
+                                continue
 
                             logger.info(f"Telegram Text Command: '{text}' by chat: {from_chat}")
                             threading.Thread(
