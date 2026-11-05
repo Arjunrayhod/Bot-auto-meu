@@ -6,6 +6,64 @@
   ],
   "cia_details": [],
   "exam_results": {
+    "BCA Regular Semester - 2 FOCSA - June 2026": [
+      {
+        "sr": "1",
+        "code": "25ALS110T",
+        "course": "Environmental Studies",
+        "credit": "2.00",
+        "grade": "B+"
+      },
+      {
+        "sr": "2",
+        "code": "25BCC040P",
+        "course": "Database Concepts & RDBMS",
+        "credit": "2.00",
+        "grade": "B"
+      },
+      {
+        "sr": "3",
+        "code": "25BCC040T",
+        "course": "Database Concepts & RDBMS",
+        "credit": "4.00",
+        "grade": "B+"
+      },
+      {
+        "sr": "4",
+        "code": "25BCC050P",
+        "course": "Cloud Computing Concepts-II",
+        "credit": "2.00",
+        "grade": "B+"
+      },
+      {
+        "sr": "5",
+        "code": "25BCC050T",
+        "course": "Cloud Computing Concepts-II",
+        "credit": "4.00",
+        "grade": "B+"
+      },
+      {
+        "sr": "6",
+        "code": "25BCC060P",
+        "course": "Linux Administration Lab",
+        "credit": "3.00",
+        "grade": "B+"
+      },
+      {
+        "sr": "7",
+        "code": "25BCC250P",
+        "course": "Data Structures Using C Lab",
+        "credit": "3.00",
+        "grade": "B"
+      },
+      {
+        "sr": "8",
+        "code": "25ECS050",
+        "course": "Communicative English",
+        "credit": "2.00",
+        "grade": "A"
+      }
+    ],
     "BCA Regular Semester - 1 FOCSA - December 2025": [
       {
         "sr": "1",
@@ -58,5 +116,5 @@
       }
     ]
   },
-"updated_at": "2026-11-05 19:17:47"
+  "updated_at": "2026-11-05 23:07:42"
 }
