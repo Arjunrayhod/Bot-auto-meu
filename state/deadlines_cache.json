@@ -3,7 +3,7 @@
     "title": "Assignment",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=1LGW9FTb-iLxQ7ALk6vW-wt-s0tovyPlxbrvfmIjog2uqFGJdKQD9QSJDhs50oaf",
     "due_date": "2026-11-06",
-    "days_left": -1,
+    "days_left": -2,
     "is_submitted": true,
     "due_date_str": "06-11-2026",
     "unit": "4 - Server Security and Update Management"
@@ -12,7 +12,7 @@
     "title": "Assignment 1",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=TCH6BY3jWFTQmOEyzB6_Q3S8yevdcVYp6rhu6xr9Slyvpv9POm_wGtL-y_eEsX9C",
     "due_date": "2026-11-10",
-    "days_left": 3,
+    "days_left": 2,
     "is_submitted": false,
     "due_date_str": "10-11-2026",
     "unit": "-"
@@ -21,7 +21,7 @@
     "title": "Assignment 2",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=sm0YM678UmeUz-f_eFMPsXGCI8GP6GkIAcGfESj175mqdxl3oY5cu319lZM5YxW-",
     "due_date": "2026-11-10",
-    "days_left": 3,
+    "days_left": 2,
     "is_submitted": false,
     "due_date_str": "10-11-2026",
     "unit": "2 - Introduction HTML"
@@ -30,7 +30,7 @@
     "title": "Assignment 3",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=TaEXowtPbZDlWVglkak4mbj1ZZvFcb3orgCxDSseI6OsZVS-hRw5x9EAggOPXBoe",
     "due_date": "2026-11-10",
-    "days_left": 3,
+    "days_left": 2,
     "is_submitted": false,
     "due_date_str": "10-11-2026",
     "unit": "3 - Introduction to CSS"
@@ -39,7 +39,7 @@
     "title": "Assignment 4",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=-bRst153apS9MjQ227E4lU71uAUNTplbeY7jXTlScq2C6vz6XZObxtFRFxdJ_rIp",
     "due_date": "2026-11-10",
-    "days_left": 3,
+    "days_left": 2,
     "is_submitted": false,
     "due_date_str": "10-11-2026",
     "unit": "4 - JavaScript"
@@ -48,7 +48,7 @@
     "title": "Assignment 5",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=07RC5d-zdaRHn8gZMPw7Hu-_S_dwb3wpD4vDyD288Ci8a1PLptj0-ZZoHgK5Rw3s",
     "due_date": "2026-11-10",
-    "days_left": 3,
+    "days_left": 2,
     "is_submitted": false,
     "due_date_str": "10-11-2026",
     "unit": "5 - PHP"
@@ -57,7 +57,7 @@
     "title": "Assignment 5: Server-Side PHP Scripting & Database Form Integration",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=nCKZ2F2bZqvRxk1U2WCopH63_bkoRzZidC6wSSgQcrZFbOa22ISCIE2MexRdAoYd",
     "due_date": "2026-11-14",
-    "days_left": 7,
+    "days_left": 6,
     "is_submitted": false,
     "due_date_str": "14-11-2026",
     "unit": "-"
@@ -66,7 +66,7 @@
     "title": "Assignment 1: Basics of C++ Programming",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=LVk9G1xC1bEmSsLdiL8KlAf79ZceCadh-c5SXfVHGyxNtJtpftQwQhfq9kCCNz8T",
     "due_date": "2026-11-15",
-    "days_left": 8,
+    "days_left": 7,
     "is_submitted": false,
     "due_date_str": "15-11-2026",
     "unit": "1 - Unit I: Introduction to Basic Programming Concepts"
