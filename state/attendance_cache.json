@@ -1,8 +1,8 @@
 {
-  "overall_percentage": 82.02,
-  "total_slots": 267,
+  "overall_percentage": 81.41,
+  "total_slots": 269,
   "present_slots": 219,
-  "absent_slots": 48,
+  "absent_slots": 50,
   "subjects": [
     {
       "slot_type": "Theory",
@@ -19,12 +19,12 @@
       "slot_type": "Theory",
       "course_code": "25BCC080T",
       "course_name": "Fundamentals of Storage",
-      "conducted": 40,
+      "conducted": 41,
       "present": 27,
-      "absent": 13,
-      "percentage": 67.5,
+      "absent": 14,
+      "percentage": 65.85,
       "is_low": true,
-      "recovery_needed": 12
+      "recovery_needed": 15
     },
     {
       "slot_type": "Practical",
@@ -129,12 +129,12 @@
       "slot_type": "Theory",
       "course_code": "",
       "course_name": "Other",
-      "conducted": 5,
+      "conducted": 6,
       "present": 4,
-      "absent": 1,
-      "percentage": 80.0,
-      "is_low": false,
-      "recovery_needed": 0
+      "absent": 2,
+      "percentage": 66.67,
+      "is_low": true,
+      "recovery_needed": 2
     }
   ]
 }
