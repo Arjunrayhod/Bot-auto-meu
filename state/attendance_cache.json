@@ -19,21 +19,21 @@
       "slot_type": "Theory",
       "course_code": "25BCC080T",
       "course_name": "Fundamentals of Storage",
-      "conducted": 41,
+      "conducted": 40,
       "present": 27,
-      "absent": 14,
-      "percentage": 65.85,
+      "absent": 13,
+      "percentage": 67.5,
       "is_low": true,
-      "recovery_needed": 15
+      "recovery_needed": 12
     },
     {
       "slot_type": "Practical",
       "course_code": "25BCC090P",
       "course_name": "Object Oriented Programming using C++",
-      "conducted": 35,
+      "conducted": 36,
       "present": 29,
-      "absent": 6,
-      "percentage": 82.86,
+      "absent": 7,
+      "percentage": 80.56,
       "is_low": false,
       "recovery_needed": 0
     },
