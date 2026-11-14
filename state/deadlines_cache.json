@@ -1,14 +1,5 @@
 [
   {
-    "title": "Assignment 5",
-    "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=07RC5d-zdaRHn8gZMPw7Hu-_S_dwb3wpD4vDyD288Ci8a1PLptj0-ZZoHgK5Rw3s",
-    "due_date": "2026-11-10",
-    "days_left": -4,
-    "is_submitted": true,
-    "due_date_str": "10-11-2026",
-    "unit": "5 - PHP"
-  },
-  {
     "title": "Assignment 5: Server-Side PHP Scripting & Database Form Integration",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=nCKZ2F2bZqvRxk1U2WCopH63_bkoRzZidC6wSSgQcrZFbOa22ISCIE2MexRdAoYd",
     "due_date": "2026-11-14",
@@ -16,15 +7,6 @@
     "is_submitted": false,
     "due_date_str": "14-11-2026",
     "unit": "-"
-  },
-  {
-    "title": "Assignment 2: Decision Making, Loops, Arrays and Pointers",
-    "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=2HxKPJ10Oy6UNMCk0WZPfb2LJctKAfCc4Xtf7c2iUL3z--eXfsIZDDSDyuvcIkbk",
-    "due_date": "2026-11-15",
-    "days_left": 1,
-    "is_submitted": false,
-    "due_date_str": "15-11-2026",
-    "unit": "2 - Unit II: Functions, Arrays, and Pointers"
   },
   {
     "title": "ASSIGNMENT UNIT 5",
