@@ -3,7 +3,7 @@
     "title": "ASSIGNMENT UNIT 5",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=7mLt_sMK5aMohm5mJxQPaDCCsmBxoehhOkRgx9W2mQnn8p06K0zlQHVcFcX30Agq",
     "due_date": "2026-11-17",
-    "days_left": 0,
+    "days_left": -1,
     "is_submitted": true,
     "due_date_str": "17-11-2026",
     "unit": "5 - Local and Remote Replication Essentials"
@@ -12,7 +12,7 @@
     "title": "Assignment 5",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=VYmbrQO0WTuTARVUYtHwrjE94SOec0RBIH88IqkhvdyRj_x7tk-Dbp8SlyrllRJu",
     "due_date": "2026-11-19",
-    "days_left": 2,
+    "days_left": 1,
     "is_submitted": false,
     "due_date_str": "19-11-2026",
     "unit": "5 - Network Services and Backup"
@@ -21,7 +21,7 @@
     "title": "Unit 5",
     "url": "https://meu.gnums.co.in/StudentPanel/LMS/LMS_Content_ViewDetailedForStudent.aspx?ContentID=FKfYPM-aWlM7Wxrm3gPMGzrV1O2KMQD4y_hEeZI0GL-Iw1zX7s3GY2jOmNilFK1I",
     "due_date": "2026-11-30",
-    "days_left": 13,
+    "days_left": 12,
     "is_submitted": false,
     "due_date_str": "30-11-2026",
     "unit": "5 - Network security"
