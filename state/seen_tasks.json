@@ -5,6 +5,12 @@
       "status": "error: Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"table tr:has(a), table[id*='gv'] tr, table[id*='Grid'] tr\").first.locator(\"a\").first\n    - locator resolved to <a title=\"\" data-html=\"true\" data-placement=\"top\" data-trigger=\"hover\" data-toggle=\"tooltip\" data-container=\"body\" data-original-title=\"Download Circular\" id=\"ctl00_cphPageContent_rpCircular_ctl00_lbtnDownloadAttachment\" href=\"javascript:__doPostBack('ctl00$cphPageContent$rpCircular$ctl00$lbtnDownloadAttachment','')\">…</a>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n",
       "timestamp": "2026-11-18 14:05:11",
       "metadata": {}
+    },
+    "ctl00_cphPageContent_rpCircular_ctl01_lbtnDownloadAttachment": {
+      "title": "Task #1",
+      "status": "error: Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"table tr:has(a), table[id*='gv'] tr, table[id*='Grid'] tr\").nth(1).locator(\"a\").first\n    - locator resolved to <a title=\"\" data-html=\"true\" data-placement=\"top\" data-trigger=\"hover\" data-toggle=\"tooltip\" data-container=\"body\" data-original-title=\"Download Circular\" id=\"ctl00_cphPageContent_rpCircular_ctl01_lbtnDownloadAttachment\" href=\"javascript:__doPostBack('ctl00$cphPageContent$rpCircular$ctl01$lbtnDownloadAttachment','')\">…</a>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n",
+      "timestamp": "2026-11-18 17:41:59",
+      "metadata": {}
     }
   },
   "notifications": {
